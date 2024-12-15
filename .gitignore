@@ -2,5 +2,8 @@
 /.vscode
 /app/__pycache__
 /app/database/__pycache__
+/app/handlers/__pycache__
+/app/keyboards/__pycache__
+/app/utils/__pycache__
 .env
 db.sqlite3
