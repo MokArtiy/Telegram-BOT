@@ -13,7 +13,7 @@ from app.database.models import async_main
 from app.utils.commands import set_commands
 from app.handlers.start import get_start
 from app.handlers import gpt_tasks
-from app.states.states import WorkGPT
+from app.states.states import WorkGPT, InfAboutFriend
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -42,10 +42,21 @@ dp.message.register(get_start, Command(commands='start'))
 #gpt-functions
 dp.callback_query.register(gpt_tasks.to_main, F.data == 'to_main')
 dp.callback_query.register(gpt_tasks.gpt_main_menu, F.data == 'gpt')
+dp.message.register(gpt_tasks.stop, WorkGPT.process)
+#CUSTOM-QUESTION
 dp.callback_query.register(gpt_tasks.custom_question, F.data == 'custom_question')
 dp.callback_query.register(gpt_tasks.stop_dialog, F.data == 'stop_dialog')
 dp.message.register(gpt_tasks.ai, WorkGPT.input_question)
-dp.message.register(gpt_tasks.stop, WorkGPT.process)
+#ANECDOTE
+dp.callback_query.register(gpt_tasks.gen_anecdote, F.data == 'anecdote')
+dp.callback_query.register(gpt_tasks.gen_more_anecdote, F.data == 'more_anecdote')
+#PRESENTS
+dp.callback_query.register(gpt_tasks.gen_presents, F.data == 'present_4_friend')
+dp.callback_query.register(gpt_tasks.men_fr, F.data == 'men_fr')
+dp.callback_query.register(gpt_tasks.women_fr, F.data == 'women_fr')
+dp.message.register(gpt_tasks.age_fr, InfAboutFriend.age)
+dp.message.register(gpt_tasks.hobby_fr, InfAboutFriend.hobby)
+dp.callback_query.register(gpt_tasks.gen_more_presents, F.data == 'more_presents')
 
 
 if __name__ == '__main__':

@@ -31,3 +31,39 @@ next_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+next_anecdote_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Сгенерировать ещё анекдот', callback_data='more_anecdote')
+        ],
+        [
+            InlineKeyboardButton(text='Закончить диалог', callback_data='stop_dialog'),
+            InlineKeyboardButton(text='На главную', callback_data='to_main')
+        ]
+    ]
+)
+
+next_presents_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Сгенерировать ещё варианты', callback_data='more_presents')
+        ],
+        [
+            InlineKeyboardButton(text='Закончить диалог', callback_data='stop_dialog'),
+            InlineKeyboardButton(text='На главную', callback_data='to_main')
+        ]
+    ]
+)
+
+gender_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Мужской', callback_data='men_fr'),
+            InlineKeyboardButton(text='Женский', callback_data='women_fr'),
+        ]
+    ]
+)
