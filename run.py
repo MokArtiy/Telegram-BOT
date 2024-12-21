@@ -2,6 +2,7 @@ import os
 import asyncio
 import logging
 from dotenv import load_dotenv
+from sys import argv
 
 from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
@@ -9,15 +10,16 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from app.database.models import async_main
+from app.database.models import create_db, drop_db, async_session
 from app.utils.commands import set_commands
-from app.handlers.start import get_start
-from app.handlers import gpt_tasks
+from app.handlers import start, gpt_tasks, admin_panel
 from app.states.states import WorkGPT, InfAboutFriend
+
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 ADMIN_ID = os.getenv('ADMIN_ID')
+PARAM = ''
 
 bot = Bot(token=TOKEN, 
           default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -25,7 +27,11 @@ bot = Bot(token=TOKEN,
 dp = Dispatcher()
 
 async def main():
-    await async_main()
+    global PARAM
+    PARAM = argv
+    if len(PARAM) != 2 :
+        PARAM.append('create')
+        
     await set_commands(bot)
     try:
         await dp.start_polling(bot)
@@ -33,14 +39,22 @@ async def main():
         await bot.session.close()
     
 async def start_bot(bot: Bot):
+    if PARAM[1]=='drop':
+        await drop_db()
+    await create_db()
+    
     await bot.send_message(int(ADMIN_ID), text='Бот запущен')
     
+async def stop_bot(bot: Bot):
+    await bot.send_message(int(ADMIN_ID), text='Бот выключен')
     
+
 dp.startup.register(start_bot)
-dp.message.register(get_start, Command(commands='start'))
+dp.shutdown.register(stop_bot)
+dp.message.register(start.get_start, Command(commands='start'))
+dp.callback_query.register(start.to_main, F.data == 'to_main')
 
 #gpt-functions
-dp.callback_query.register(gpt_tasks.to_main, F.data == 'to_main')
 dp.callback_query.register(gpt_tasks.gpt_main_menu, F.data == 'gpt')
 dp.message.register(gpt_tasks.stop, WorkGPT.process)
 #CUSTOM-QUESTION
@@ -57,6 +71,20 @@ dp.callback_query.register(gpt_tasks.women_fr, F.data == 'women_fr')
 dp.message.register(gpt_tasks.age_fr, InfAboutFriend.age)
 dp.message.register(gpt_tasks.hobby_fr, InfAboutFriend.hobby)
 dp.callback_query.register(gpt_tasks.gen_more_presents, F.data == 'more_presents')
+
+#admin-panel
+dp.callback_query.register(admin_panel.return_to_panel, F.data == 'return_to_panel')
+dp.callback_query.register(admin_panel.return_to_list, F.data == 'return_to_list')
+dp.callback_query.register(admin_panel.return_to_ban_list, F.data == 'return_to_ban_list')
+dp.callback_query.register(admin_panel.admin_main_menu, F.data == 'admin_panel')
+dp.callback_query.register(admin_panel.admin_users_list, F.data == 'users_list')
+dp.callback_query.register(admin_panel.get_list_banned_users, F.data == 'ban_users')
+dp.callback_query.register(admin_panel.get_user, F.data.startswith('user_'))
+dp.callback_query.register(admin_panel.get_banned_user, F.data.startswith('bans_'))
+dp.callback_query.register(admin_panel.bun_user, F.data == 'ban_user')
+dp.callback_query.register(admin_panel.unban_user, F.data == 'unban_user')
+dp.callback_query.register(admin_panel.unban_user_in_ban, F.data == 'unban_user_in_ban')
+dp.callback_query.register(admin_panel.bun_user_in_ban, F.data == 'ban_user_in_ban')
 
 
 if __name__ == '__main__':

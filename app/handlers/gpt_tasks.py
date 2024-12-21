@@ -1,27 +1,29 @@
+import asyncio
+
 from aiogram import F, html
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
 
 from ..AI.generation import generate_ai, generate_anecdote, generate_presents
-from ..keyboards import main_kb, gpt_kb
+from ..database.requests import check_ban_user
+from ..keyboards import gpt_kb
 from ..states.states import WorkGPT, InfAboutFriend
+
 
 DATA = 0
 TEXT: str
 
 
-async def to_main(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
-    await callback.answer('')
-    await callback.message.edit_text(
-        text=f"Добро пожаловать в {html.link('NewYear-Bot', 'https://t.me/new_artem_year_bot')}\n"
-             f"Выберете, что вы хотите сделать в меню ниже ⬇️",
-        reply_markup=main_kb.main_menu_1(callback.from_user.id)
-    )
-
 async def gpt_main_menu(callback: CallbackQuery):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+        
     await callback.message.edit_text(
         text='Выберете, что вы хотите от ИИ', reply_markup=gpt_kb.gpt_main_kb
     )
@@ -33,12 +35,26 @@ async def stop(message: Message):
 #CUSTOM-QUESTION
 async def custom_question(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await callback.message.answer(text='Начните новый диалог, введя свой вопрос!')
     await state.set_state(WorkGPT.input_question)
     
 async def stop_dialog(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await callback.message.answer(text='Выберете, что вы хотите от ИИ', reply_markup=gpt_kb.gpt_main_kb)
 
 async def ai(message: Message, state: FSMContext):
@@ -69,6 +85,13 @@ async def ai(message: Message, state: FSMContext):
 #ANECDOTE
 async def gen_more_anecdote(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await state.set_state(WorkGPT.process)
     msg = await callback.message.edit_text(text='Анекдот генерируется...')
     res = await generate_anecdote()
@@ -94,6 +117,13 @@ async def gen_more_anecdote(callback: CallbackQuery, state: FSMContext):
     
 async def gen_anecdote(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await state.set_state(WorkGPT.process)
     msg = await callback.message.answer(text='Анекдот генерируется...')
     res = await generate_anecdote()
@@ -121,16 +151,37 @@ async def gen_anecdote(callback: CallbackQuery, state: FSMContext):
 #PRESENT-FOR-FRIEND
 async def gen_presents(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await callback.message.answer(text='Выберете пол вашего друга', reply_markup=gpt_kb.gender_kb)
 
 async def men_fr(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await state.update_data(gender='другу')
     await state.set_state(InfAboutFriend.age)
     await callback.message.answer(text='Сколько лет вашему другу?')
     
 async def women_fr(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await state.update_data(gender='подруге')
     await state.set_state(InfAboutFriend.age)
     await callback.message.answer(text='Сколько лет вашей подруге?')
@@ -182,6 +233,13 @@ async def hobby_fr(message: Message, state: FSMContext):
 
 async def gen_more_presents(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
+    
+    if (await check_ban_user(callback.from_user.id)):
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await state.set_state(WorkGPT.process)
     global DATA
     global TEXT

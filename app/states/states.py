@@ -10,3 +10,6 @@ class InfAboutFriend(StatesGroup):
     gender = State()
     age = State()
     hobby = State()
+    
+class AdminPanel(StatesGroup):
+    check_user = State()
