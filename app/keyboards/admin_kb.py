@@ -8,10 +8,10 @@ main_admin_kb = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Список пользователей', callback_data='users_list'
+                text='Список юзеров', callback_data='users_list'
             ),
             InlineKeyboardButton(
-                text='Рассылка сообщений', callback_data='sending_msg'
+                text='Рассылка', callback_data='sending_msg'
             )
         ],
         [

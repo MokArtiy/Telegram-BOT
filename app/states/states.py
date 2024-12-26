@@ -13,3 +13,6 @@ class InfAboutFriend(StatesGroup):
     
 class AdminPanel(StatesGroup):
     check_user = State()
+    
+class SecretKey(StatesGroup):
+    input_key = State()

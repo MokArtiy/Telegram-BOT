@@ -1,7 +1,7 @@
 import asyncio
 
 from aiogram import F, html
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
 
@@ -24,8 +24,12 @@ async def gpt_main_menu(callback: CallbackQuery):
                  f'[Администратором](tg://user?id={5034740706}).',
             parse_mode='markdown')
         
-    await callback.message.edit_text(
-        text='Выберете, что вы хотите от ИИ', reply_markup=gpt_kb.gpt_main_kb
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=FSInputFile(path="image/main-kb.png"),
+            caption='Выберете, что вы хотите от ИИ', 
+        ), reply_markup=gpt_kb.gpt_main_kb
+        
     )
 
 async def stop(message: Message):
@@ -55,7 +59,13 @@ async def stop_dialog(callback: CallbackQuery, state: FSMContext):
                  f'[Администратором](tg://user?id={5034740706}).',
             parse_mode='markdown')
     
-    await callback.message.answer(text='Выберете, что вы хотите от ИИ', reply_markup=gpt_kb.gpt_main_kb)
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=FSInputFile(path="image/main-kb.png"),
+            caption='Выберете, что вы хотите от ИИ', 
+        ),
+        reply_markup=gpt_kb.gpt_main_kb
+    )
 
 async def ai(message: Message, state: FSMContext):
     await state.set_state(WorkGPT.process)

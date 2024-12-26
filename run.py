@@ -10,10 +10,11 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
+from webserver import keep_alive
 from app.database.models import create_db, drop_db, async_session
 from app.utils.commands import set_commands
-from app.handlers import start, gpt_tasks, admin_panel
-from app.states.states import WorkGPT, InfAboutFriend
+from app.handlers import start, gpt_tasks, admin_panel, input_key, tools, my_profile, support
+from app.states.states import WorkGPT, InfAboutFriend, SecretKey
 
 
 load_dotenv()
@@ -52,6 +53,7 @@ async def stop_bot(bot: Bot):
 dp.startup.register(start_bot)
 dp.shutdown.register(stop_bot)
 dp.message.register(start.get_start, Command(commands='start'))
+dp.message.register(start.photo_inf, F.photo)
 dp.callback_query.register(start.to_main, F.data == 'to_main')
 
 #gpt-functions
@@ -86,10 +88,24 @@ dp.callback_query.register(admin_panel.unban_user, F.data == 'unban_user')
 dp.callback_query.register(admin_panel.unban_user_in_ban, F.data == 'unban_user_in_ban')
 dp.callback_query.register(admin_panel.bun_user_in_ban, F.data == 'ban_user_in_ban')
 
+#input-key
+dp.callback_query.register(input_key.to_main_from_gift, F.data == 'to_main_from_gift')
+dp.callback_query.register(input_key.return_to_key, F.data == 'return_to_key')
+dp.callback_query.register(input_key.return_to_key_from_gift, F.data == 'return_to_key_from_gift')
+dp.callback_query.register(input_key.secret_key_main, F.data == 'secret_key')
+dp.callback_query.register(input_key.input_key, F.data == 'input_key')
+dp.callback_query.register(input_key.get_gift, F.data == 'get_gift')
+dp.message.register(input_key.check_key, SecretKey.input_key)
+
+#plug
+dp.callback_query.register(tools.plug, F.data == 'utils')
+dp.callback_query.register(support.plug, F.data == 'support_team')
+dp.callback_query.register(my_profile.plug, F.data == 'my_profile')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     try:
+        keep_alive()
         asyncio.run(main())
     except KeyboardInterrupt:
         print('Бот выключен')
