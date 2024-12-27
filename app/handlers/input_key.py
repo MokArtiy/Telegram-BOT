@@ -179,16 +179,16 @@ async def get_gift(callback: CallbackQuery):
         )
     if callback.from_user.id == int(USER_GIFT_LIST['Angelina']):
         await callback.message.answer_video_note(
-            FSInputFile(path='video/for_angelina'),
+            FSInputFile(path='video/.mp4'),
             reply_markup=key_kb.return_from_gift_key_kb
         )
     if callback.from_user.id == int(USER_GIFT_LIST['Marina']):
         await callback.message.answer_video_note(
-            FSInputFile(path='video/for_marina'),
+            FSInputFile(path='video/for_marina.mp4'),
             reply_markup=key_kb.return_from_gift_key_kb
         )
     if callback.from_user.id == int(USER_GIFT_LIST['Valeria']):
         await callback.message.answer_video_note(
-            FSInputFile(path='video/for_valeria'),
+            FSInputFile(path='video/for_valeria.mp4'),
             reply_markup=key_kb.return_from_gift_key_kb
         )

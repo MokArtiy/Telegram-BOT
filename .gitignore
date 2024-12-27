@@ -1,5 +1,8 @@
 /.venv
 /.vscode
+/__pycache__
+/.idea
+/video
 /app/__pycache__
 /app/database/__pycache__
 /app/handlers/__pycache__
