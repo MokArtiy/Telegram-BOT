@@ -3,6 +3,7 @@ from app.database.models import User
 from sqlalchemy import select
 
 
+#USER
 async def set_user(tg_id: int, first_name: str, username: str = '') -> None:
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
@@ -40,5 +41,6 @@ async def update_user(user_tg_id, data):
             user.banned = data.get('Banned')
         
         await session.commit()
-        
+
+#MESSAGE
         

@@ -61,7 +61,10 @@ dp.callback_query.register(gpt_tasks.gpt_main_menu, F.data == 'gpt')
 dp.message.register(gpt_tasks.stop, WorkGPT.process)
 #CUSTOM-QUESTION
 dp.callback_query.register(gpt_tasks.custom_question, F.data == 'custom_question')
+dp.callback_query.register(gpt_tasks.more_question, F.data == 'more_question')
 dp.callback_query.register(gpt_tasks.stop_dialog, F.data == 'stop_dialog')
+dp.callback_query.register(gpt_tasks.stop_dialog_in_ai, F.data == 'stop_dialog_in_ai')
+dp.callback_query.register(gpt_tasks.to_main_from_ai, F.data == 'to_main_from_ai')
 dp.message.register(gpt_tasks.ai, WorkGPT.input_question)
 #ANECDOTE
 dp.callback_query.register(gpt_tasks.gen_anecdote, F.data == 'anecdote')
@@ -78,6 +81,7 @@ dp.callback_query.register(gpt_tasks.gen_more_presents, F.data == 'more_presents
 dp.callback_query.register(admin_panel.return_to_panel, F.data == 'return_to_panel')
 dp.callback_query.register(admin_panel.return_to_list, F.data == 'return_to_list')
 dp.callback_query.register(admin_panel.return_to_ban_list, F.data == 'return_to_ban_list')
+dp.callback_query.register(admin_panel.return_to_sending_msg, F.data == 'return_to_sending_msg')
 dp.callback_query.register(admin_panel.admin_main_menu, F.data == 'admin_panel')
 dp.callback_query.register(admin_panel.admin_users_list, F.data == 'users_list')
 dp.callback_query.register(admin_panel.get_list_banned_users, F.data == 'ban_users')
@@ -87,6 +91,9 @@ dp.callback_query.register(admin_panel.bun_user, F.data == 'ban_user')
 dp.callback_query.register(admin_panel.unban_user, F.data == 'unban_user')
 dp.callback_query.register(admin_panel.unban_user_in_ban, F.data == 'unban_user_in_ban')
 dp.callback_query.register(admin_panel.bun_user_in_ban, F.data == 'ban_user_in_ban')
+#SENDING-MESSAGE
+dp.callback_query.register(admin_panel.sending_msg, F.data == 'sending_msg')
+dp.callback_query.register(admin_panel.create_sending, F.data == 'create_sending')
 
 #input-key
 dp.callback_query.register(input_key.to_main_from_gift, F.data == 'to_main_from_gift')
@@ -105,7 +112,6 @@ dp.callback_query.register(my_profile.plug, F.data == 'my_profile')
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     try:
-        keep_alive()
         asyncio.run(main())
     except KeyboardInterrupt:
         print('Бот выключен')

@@ -26,8 +26,11 @@ next_kb = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
-            InlineKeyboardButton(text='Закончить диалог', callback_data='stop_dialog'),
-            InlineKeyboardButton(text='На главную', callback_data='to_main')
+            InlineKeyboardButton(text='Задать ещё вопрос', callback_data='more_question'),
+        ],
+        [
+            InlineKeyboardButton(text='Закончить диалог', callback_data='stop_dialog_in_ai'),
+            InlineKeyboardButton(text='На главную', callback_data='to_main_from_ai')
         ]
     ]
 )

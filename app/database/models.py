@@ -29,6 +29,18 @@ class User(Base):
     description: Mapped[str] = mapped_column(String(70), nullable=True, default=None)
     banned: Mapped[bool] = mapped_column(default=False, nullable=False)
 
+class Sending(Base):
+    __tablename__ = 'sending'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    sending_id: Mapped[int] = mapped_column(autoincrement=True)
+    sending_check: Mapped[bool] = mapped_column(nullable=False, default=False)
+    sending_recipient: Mapped[dict] = mapped_column(nullable=True, default=None)
+    sending_time: Mapped[DateTime] = mapped_column(nullable=True, default=False)
+    message_text: Mapped[str] = mapped_column(String(1024), nullable=True, default=None)
+    message_media: Mapped[str] = mapped_column(nullable=True, default=None)
+    
+
 
 
 #DB-FUNCTIONS

@@ -5,6 +5,7 @@ class WorkGPT(StatesGroup):
     input_question = State()
     process = State()
     anecdote = State()
+    message_gpt_id = State()
     
 class InfAboutFriend(StatesGroup):
     gender = State()
@@ -13,6 +14,9 @@ class InfAboutFriend(StatesGroup):
     
 class AdminPanel(StatesGroup):
     check_user = State()
-    
+    message_admin_id = State()
+    edit_text = State()
+        
 class SecretKey(StatesGroup):
     input_key = State()
+    message_id = State()
