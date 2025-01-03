@@ -16,6 +16,8 @@ class AdminPanel(StatesGroup):
     check_user = State()
     message_admin_id = State()
     edit_text = State()
+    edit_media = State()
+    chosen_preset = State()
         
 class SecretKey(StatesGroup):
     input_key = State()

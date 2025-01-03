@@ -33,15 +33,30 @@ class Sending(Base):
     __tablename__ = 'sending'
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    sending_id: Mapped[int] = mapped_column(autoincrement=True)
+    sending_id: Mapped[str] = mapped_column(nullable=False)
+    sending_preset_id: Mapped[str] = mapped_column(nullable=True, default=None)
     sending_check: Mapped[bool] = mapped_column(nullable=False, default=False)
-    sending_recipient: Mapped[dict] = mapped_column(nullable=True, default=None)
-    sending_time: Mapped[DateTime] = mapped_column(nullable=True, default=False)
+    sending_time: Mapped[str] = mapped_column(nullable=True, default=None)
     message_text: Mapped[str] = mapped_column(String(1024), nullable=True, default=None)
     message_media: Mapped[str] = mapped_column(nullable=True, default=None)
+
+class Recipient(Base):
+    __tablename__ = 'recipient'
     
-
-
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    recipient_tg_id = mapped_column(BigInteger, nullable=False)
+    recipient_name: Mapped[str] = mapped_column(nullable=False)
+    preset_id: Mapped[str] = mapped_column(nullable=False, default=None)
+    sending_id: Mapped[str] = mapped_column(nullable=False, default=None)
+    
+    
+class Preset(Base):
+    __tablename__ = 'preset'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    preset_id: Mapped[int] = mapped_column(nullable=False)
+    preset_check: Mapped[bool] = mapped_column(nullable=False, default=False)
+    preset_name: Mapped[str] = mapped_column(String(32), nullable=True, default=None)
 
 #DB-FUNCTIONS
 async def create_db():

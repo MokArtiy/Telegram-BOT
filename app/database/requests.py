@@ -1,5 +1,5 @@
 from app.database.models import async_session
-from app.database.models import User
+from app.database.models import User, Sending, Preset, Recipient
 from sqlalchemy import select
 
 
@@ -43,4 +43,115 @@ async def update_user(user_tg_id, data):
         await session.commit()
 
 #MESSAGE
+async def set_sending(sending_id: str):
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
         
+        if not sending:
+            session.add(Sending(sending_id=sending_id))
+            await session.commit()
+            
+        return await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+
+async def update_sending_preset(sending_id: str, preset_id: str):
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        sending.sending_preset_id = preset_id
+        await session.commit()
+
+async def update_text(sending_id: str, message_text: str):
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        if message_text == 'None':
+            sending.message_text = None
+        else:
+            sending.message_text = message_text
+        await session.commit()
+
+async def update_media(sending_id: str, message_media: str):
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        if message_media == 'None':
+            sending.message_media = None
+        else:
+            sending.message_media = message_media
+        await session.commit()
+        
+async def get_unsave_sending(sending_id: str = None) -> Sending:
+    async with async_session() as session:
+        unsave_sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+        
+        if not unsave_sending:
+            unsave_sending = await set_sending(sending_id=sending_id)
+        return unsave_sending
+
+async def get_sending_preset_id(sending_id: str):
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        return sending.sending_preset_id
+        
+async def delete_text() -> None:
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+        sending.message_text = None
+        await session.commit()
+
+async def delete_media() -> None:
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+        sending.message_media = None
+        await session.commit()
+
+#PRESET
+async def set_preset(preset_id: str):
+    async with async_session() as session:
+        preset = await session.scalar(select(Preset).where(Preset.preset_id == preset_id))
+        
+        if not preset:
+            preset = session.add(Preset(preset_id=preset_id))
+            await session.commit()
+            
+        return await session.scalar(select(Preset).where(Preset.preset_id == preset_id))
+    
+async def get_save_presets():
+    async with async_session() as session:
+        return await session.scalars(select(Preset).where(Preset.preset_check == True))
+    
+async def get_unsave_presets(preset_id: str = None) -> Preset:
+    async with async_session() as session:
+        unsave_preset = await session.scalar(select(Preset).where(Preset.preset_check == False))
+        
+        if not unsave_preset:
+            unsave_preset = await set_preset(preset_id=preset_id)
+        return unsave_preset
+        
+#RECIPIENTS
+
+async def get_all_recipients_for_remove(sending_id: str, preset_id: str):
+    async with async_session() as session:
+        return await session.scalars(select(Recipient).where(Recipient.sending_id == sending_id and Recipient.preset_id == preset_id))
+    
+async def get_recipients_sending(sending_id: str):
+    async with async_session() as session:
+        return await session.scalars(select(Recipient).where(Recipient.sending_id == sending_id))
+    
+async def get_recipients_preset(preset_id: str):
+    async with async_session() as session:
+        return await session.scalars(select(Recipient).where(Recipient.preset_id == preset_id))
+
+async def add_recipient_all_preset(sending_id: str):
+    async with async_session() as session:
+        users = await get_users()
+        for user in users:
+            session.add(Recipient(recipient_tg_id=user.tg_id, recipient_name=user.first_name, 
+                                  preset_id='ALL', sending_id=sending_id))
+        await session.commit()
+        
+async def remove_current_preset(sending_id: str, preset_id: str):
+    async with async_session() as session:
+        recipients = await get_all_recipients_for_remove(sending_id=sending_id, preset_id=preset_id)
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        for recipient in recipients:
+            await session.delete(recipient)
+        sending.sending_preset_id = None
+        await session.commit()

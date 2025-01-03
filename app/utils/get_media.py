@@ -8,6 +8,7 @@ from aiogram.enums import ParseMode
 bot = Bot(token=os.getenv('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 class Media_tg:
+    admin_photo = FSInputFile('image/admin.png')
     main_photo = FSInputFile('image/main.png')
     key_photo = FSInputFile('image/present.png')
     profile_photo = FSInputFile('image/profile.png')
