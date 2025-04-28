@@ -1,0 +1,14 @@
+/.venv
+/.vscode
+/__pycache__
+/.idea
+/video
+/app/__pycache__
+/app/database/__pycache__
+/app/handlers/__pycache__
+/app/keyboards/__pycache__
+/app/utils/__pycache__
+/app/AI/__pycache__
+app/states/__pycache__
+.env
+db.sqlite3
