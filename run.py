@@ -113,10 +113,12 @@ dp.callback_query.register(admin_panel.choose_preset, F.data == 'choose_preset')
 dp.callback_query.register(admin_panel.delete_current_preset, F.data == 'delete_current_preset')
 dp.callback_query.register(admin_panel.manage_presets, F.data == 'manage_presets')
 dp.callback_query.register(admin_panel.create_preset, F.data == 'create_preset')
-dp.callback_query.register(admin_panel.choose_save_preset, F.data.startswith('preset_'))
+dp.callback_query.register(admin_panel.choose_save_preset, F.data.startswith('preset-save-list_'))
 #manage sending
 dp.callback_query.register(admin_panel.save_sending, F.data == 'save_and_create_sending')
 dp.callback_query.register(admin_panel.manage_sending, F.data == 'manage_sending')
+dp.callback_query.register(admin_panel.manage_sending, F.data == 'return_to_manage_sending')
+dp.callback_query.register(admin_panel.manage_current_sending, F.data.startswith('sending-list_'))
 
 #input-key
 dp.callback_query.register(input_key.to_main_from_gift, F.data == 'to_main_from_gift')

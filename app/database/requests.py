@@ -154,6 +154,19 @@ async def get_all_recipients_for_remove(sending_id: str, preset_id: str):
     async with async_session() as session:
         return await session.scalars(select(Recipient).where(Recipient.sending_id == sending_id and Recipient.preset_id == preset_id))
     
+async def get_all_recipients_ids(sending_id: str, preset_id: str) -> dict[int, str]:
+    async with async_session() as session:
+        recipients = await session.scalars(select(Recipient).where(Recipient.sending_id == sending_id and Recipient.preset_id == preset_id))
+        users_dict = {}
+        
+        for recipient in recipients:
+            user_id = recipient.recipient_tg_id
+            user_first_name = recipient.recipient_name
+            
+            users_dict[user_id] = f"{user_first_name}"
+        
+        return users_dict
+    
 async def get_recipients_sending(sending_id: str):
     async with async_session() as session:
         return await session.scalars(select(Recipient).where(Recipient.sending_id == sending_id))

@@ -19,6 +19,7 @@ class AdminPanel(StatesGroup):
     edit_text = State()
     edit_media = State()
     chosen_preset = State()
+    current_sending_id = State()
         
 class SecretKey(StatesGroup):
     input_key = State()

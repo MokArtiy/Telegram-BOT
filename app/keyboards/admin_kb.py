@@ -229,6 +229,36 @@ create_preset_kb = InlineKeyboardMarkup(
     ]
 )
 
+manage_sending_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='▶ Запустить рассылку', callback_data='run_sending'
+            ),
+            InlineKeyboardButton(
+                text='⏸ Остановить рассылку', callback_data='stop_sending'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Изменить рассылку', callback_data='edit_current_sending'
+            ),
+            InlineKeyboardButton(
+                text='Удалить рассылку', callback_data='delete_sending'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_manage_sending'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
 async def users_list():
     all_users = await get_users()
     keyboard = InlineKeyboardBuilder()
@@ -257,10 +287,10 @@ async def ready_presets_list():
     keyboard.add(InlineKeyboardButton(text='Назад', callback_data='return_to_recipients'))
     keyboard.add(InlineKeyboardButton(text='На главную', callback_data='to_main'))
     keyboard.add(InlineKeyboardButton(text='Удалить текущий', callback_data='delete_current_preset'))
-    keyboard.add(InlineKeyboardButton(text='Для всех ✔️', callback_data='preset_ALL'))
+    keyboard.add(InlineKeyboardButton(text='Для всех ✔️', callback_data='preset-save-list_ALL'))
     for preset in all_presets:
         keyboard.add(
-            InlineKeyboardButton(text=f'{str(preset.id)}. {preset.name}', callback_data=f"preset_{preset.preset_id}")
+            InlineKeyboardButton(text=f'{str(preset.id)}. {preset.name}', callback_data=f"preset-save-list_{preset.preset_id}")
         )
     return keyboard.adjust(2, 1, 1, 3).as_markup()
 

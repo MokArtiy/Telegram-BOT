@@ -755,6 +755,18 @@ async def save_sending(callback: CallbackQuery):
     )
 
 #manage-sending
+async def return_to_manage_sending(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    await state.clear()
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.admin_photo,
+            caption='Вы в меню управления сохранённых рассылок.\nВыберете действие ниже ⬇️'
+        ),
+        reply_markup=await admin_kb.sendings_list()
+    )
+
 async def manage_sending(callback: CallbackQuery):
     await callback.answer('')
     await callback.message.edit_media(
@@ -764,3 +776,88 @@ async def manage_sending(callback: CallbackQuery):
         ),
         reply_markup=await admin_kb.sendings_list()
     )
+    
+async def manage_current_sending(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    
+    sending_id = callback.data.split('_')[1]
+    sending = await rq.set_sending(sending_id=sending_id)
+    name = sending.sending_name
+    
+    await state.set_state(AdminPanel.current_sending_id)
+    await state.update_data(current_sending_id=sending_id)
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.admin_photo,
+            caption=f'Вы в меню управления рассылкой *{name}*.\nВыберете действие ниже ⬇️',
+            parse_mode='markdown'
+        ),
+        reply_markup=admin_kb.manage_sending_kb
+    )
+
+async def run_sending(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    sending_id = data['current_sending_id']
+    sending = await rq.set_sending(sending_id=sending_id)
+    users_ids = {}
+    if (sending.sending_preset_id == 'ALL'):
+        users_ids.update(await rq.get_all_recipients_ids(sending_id=sending_id, preset_id=sending.sending_preset_id))
+    # else:
+    #     preset = await rq.set_preset(preset_id=sending.sending_preset_id)
+    
+    
+    disable_notification: bool = False,
+    batch_size: int = 30,
+    delay: float = 1.0
+    
+    # :param disable_notification: Отключить уведомления
+    # :param batch_size: Количество сообщений в одной группе
+    # :param delay: Задержка между группами в секундах
+    
+    success = 0
+    failed = 0
+    
+    for i in range(0, len(user_ids), batch_size):
+        batch = user_ids[i:i + batch_size]
+        tasks = []
+        
+        for user_id in batch:
+            try:
+                if photo:
+                    task = bot.send_photo(
+                        chat_id=user_id,
+                        photo=photo,
+                        caption=text,
+                        disable_notification=disable_notification
+                    )
+                else:
+                    task = bot.send_message(
+                        chat_id=user_id,
+                        text=text,
+                        disable_notification=disable_notification
+                    )
+                tasks.append(task)
+            except Exception as e:
+                logging.error(f"Ошибка при создании задачи для {user_id}: {e}")
+                failed += 1
+        
+        # Выполняем пачку запросов
+        try:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for res in results:
+                if isinstance(res, Exception):
+                    failed += 1
+                    logging.error(f"Ошибка отправки: {res}")
+                else:
+                    success += 1
+        except Exception as e:
+            logging.error(f"Ошибка в группе {i//batch_size}: {e}")
+            failed += len(batch)
+        
+        # Задержка между пачками
+        if i + batch_size < len(user_ids):
+            await asyncio.sleep(delay)
+    
+    return {"success": success, "failed": failed}
+    
