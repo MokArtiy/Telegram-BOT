@@ -117,7 +117,13 @@ dp.callback_query.register(admin_panel.choose_save_preset, F.data.startswith('pr
 #manage sending
 dp.callback_query.register(admin_panel.save_sending, F.data == 'save_and_create_sending')
 dp.callback_query.register(admin_panel.manage_sending, F.data == 'manage_sending')
-dp.callback_query.register(admin_panel.manage_sending, F.data == 'return_to_manage_sending')
+dp.callback_query.register(admin_panel.return_to_manage_sending, F.data == 'return_to_manage_sending')
+dp.callback_query.register(admin_panel.return_to_manage_current_sending, F.data == 'return_to_manage_current_sending')
+dp.callback_query.register(admin_panel.return_to_edit_current_sending, F.data == 'return_to_edit_current_sending')
+dp.callback_query.register(admin_panel.run_sending, F.data == 'run_sending')
+dp.callback_query.register(admin_panel.edit_current_sending, F.data == 'edit_current_sending')
+dp.callback_query.register(admin_panel.edit_current_sending_name, F.data == 'edit_current_sending_name')
+dp.message.register(admin_panel.input_current_sending_name, AdminPanel.edit_current_sending_name)
 dp.callback_query.register(admin_panel.manage_current_sending, F.data.startswith('sending-list_'))
 
 #input-key

@@ -124,12 +124,47 @@ create_sending_kb = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text='Создать рассылку', callback_data='save_and_create_sending'
+                text='Сохранить рассылку', callback_data='save_and_create_sending'
             )
         ],
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_sending_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+edit_current_sending_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+          InlineKeyboardButton(
+              text='Изменить название', callback_data='edit_current_sending_name'
+          )  
+        ],
+        [
+            InlineKeyboardButton(
+                text='Изменить текст', callback_data='edit_text'
+            ),
+            InlineKeyboardButton(
+                text='Изменить медиа', callback_data='edit_media'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Получатели', callback_data='edit_recipients'
+            ),
+            InlineKeyboardButton(
+                text='Изменить время', callback_data='edit_time'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_manage_current_sending'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
@@ -144,6 +179,20 @@ return_from_edit_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_create_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_edit_current_sending_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_current_sending'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
@@ -234,18 +283,18 @@ manage_sending_kb = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='▶ Запустить рассылку', callback_data='run_sending'
+                text='▶ Запустить', callback_data='run_sending'
             ),
             InlineKeyboardButton(
-                text='⏸ Остановить рассылку', callback_data='stop_sending'
+                text='⏸ Остановить', callback_data='stop_sending'
             )
         ],
         [
             InlineKeyboardButton(
-                text='Изменить рассылку', callback_data='edit_current_sending'
+                text='Изменить', callback_data='edit_current_sending'
             ),
             InlineKeyboardButton(
-                text='Удалить рассылку', callback_data='delete_sending'
+                text='Удалить', callback_data='delete_sending'
             )
         ],
         [
