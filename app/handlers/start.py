@@ -25,8 +25,13 @@ async def get_start(message: Message, state: FSMContext):
     )
 
 async def to_main(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
     await callback.answer('')
+    
+    await state.clear()
+    
+    sending = await rq.get_edit_current_sending()
+    if sending: 
+        await rq.update_edit_status(sending_id=sending.sending_id, status=False)
     
     if (await check_ban_user(callback.from_user.id)):
         return await callback.message.answer(

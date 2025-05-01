@@ -148,18 +148,18 @@ edit_current_sending_kb = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text='Изменить текст', callback_data='edit_text'
+                text='Изменить текст', callback_data='edit_current_sending_text'
             ),
             InlineKeyboardButton(
-                text='Изменить медиа', callback_data='edit_media'
+                text='Изменить медиа', callback_data='edit_current_sending_media'
             )
         ],
         [
             InlineKeyboardButton(
-                text='Получатели', callback_data='edit_recipients'
+                text='Получатели', callback_data='edit_current_sending_recipients'
             ),
             InlineKeyboardButton(
-                text='Изменить время', callback_data='edit_time'
+                text='Изменить время', callback_data='edit_current_sending_time'
             )
         ],
         [
@@ -229,6 +229,20 @@ delete_media = InlineKeyboardMarkup(
     ]
 )
 
+delete_current_sending_media = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_current_sending'
+            ),
+            InlineKeyboardButton(
+                text='Удалить медиа', callback_data='delete_media'
+            )
+        ]
+    ]
+)
+
 edit_recipients_kb = InlineKeyboardMarkup(
     inline_keyboard=
     [
@@ -243,6 +257,28 @@ edit_recipients_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_create_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+edit_current_sending_recipients_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Выбрать пресет', callback_data='choose_current_sending_preset'
+            ),
+            InlineKeyboardButton(
+                text='Настроить вручную', callback_data='custom_current_sending_setting'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_current_sending'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
@@ -294,7 +330,7 @@ manage_sending_kb = InlineKeyboardMarkup(
                 text='Изменить', callback_data='edit_current_sending'
             ),
             InlineKeyboardButton(
-                text='Удалить', callback_data='delete_sending'
+                text='Удалить', callback_data='delete_current_sending'
             )
         ],
         [
@@ -303,6 +339,20 @@ manage_sending_kb = InlineKeyboardMarkup(
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+delete_sending_choose = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='✅ Да', callback_data='yes_delete'
+            ),
+            InlineKeyboardButton(
+                text='❌ Нет', callback_data='no_delete'
             )
         ]
     ]
@@ -340,6 +390,19 @@ async def ready_presets_list():
     for preset in all_presets:
         keyboard.add(
             InlineKeyboardButton(text=f'{str(preset.id)}. {preset.name}', callback_data=f"preset-save-list_{preset.preset_id}")
+        )
+    return keyboard.adjust(2, 1, 1, 3).as_markup()
+
+async def ready_presets_for_current_sending_list():
+    all_presets = await get_save_presets()
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data='return_to_current_sending_recipients'))
+    keyboard.add(InlineKeyboardButton(text='На главную', callback_data='to_main'))
+    keyboard.add(InlineKeyboardButton(text='Удалить текущий', callback_data='delete_current_preset_in_current_sending'))
+    keyboard.add(InlineKeyboardButton(text='Для всех ✔️', callback_data='preset-save-list-current-sending_ALL'))
+    for preset in all_presets:
+        keyboard.add(
+            InlineKeyboardButton(text=f'{str(preset.id)}. {preset.name}', callback_data=f"preset-save-list-current-sending_{preset.preset_id}")
         )
     return keyboard.adjust(2, 1, 1, 3).as_markup()
 

@@ -95,6 +95,12 @@ async def update_status(sending_id: str) -> int:
             return 0
         await session.commit()
         return 1
+    
+async def update_edit_status(sending_id: str, status: bool) -> None:
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        sending.edit_sending_check = status
+        await session.commit()
         
 async def get_unsave_sending(sending_id: str = None) -> Sending:
     async with async_session() as session:
@@ -107,6 +113,10 @@ async def get_unsave_sending(sending_id: str = None) -> Sending:
 async def get_save_sendings():
     async with async_session() as session:
         return await session.scalars(select(Sending).where(Sending.sending_check == True))
+    
+async def get_edit_current_sending():
+    async with async_session() as session:
+        return await session.scalar(select(Sending).where(Sending.edit_sending_check == True))
 
 async def get_sending_preset_id(sending_id: str):
     async with async_session() as session:
@@ -115,14 +125,28 @@ async def get_sending_preset_id(sending_id: str):
         
 async def delete_text() -> None:
     async with async_session() as session:
-        sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+        sending = await session.scalar(select(Sending).where(Sending.edit_sending_check == True))
+        
+        if not sending:
+            sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+            
         sending.message_text = None
         await session.commit()
 
 async def delete_media() -> None:
     async with async_session() as session:
-        sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+        sending = await session.scalar(select(Sending).where(Sending.edit_sending_check == True))
+        
+        if not sending:
+            sending = await session.scalar(select(Sending).where(Sending.sending_check == False))
+
         sending.message_media = None
+        await session.commit()
+
+async def delete_sending(sending_id: str) -> None:
+    async with async_session() as session:
+        sending = await session.scalar(select(Sending).where(Sending.sending_id == sending_id))
+        await session.delete(sending)
         await session.commit()
 
 #PRESET

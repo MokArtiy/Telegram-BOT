@@ -37,6 +37,7 @@ class Sending(Base):
     sending_preset_id: Mapped[str] = mapped_column(nullable=True, default=None)
     sending_name: Mapped[str] = mapped_column(String(32), nullable=True, default=None)
     sending_check: Mapped[bool] = mapped_column(nullable=False, default=False)
+    edit_sending_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     sending_time: Mapped[str] = mapped_column(nullable=True, default=None)
     message_text: Mapped[str] = mapped_column(String(1024), nullable=True, default=None)
     message_media: Mapped[str] = mapped_column(nullable=True, default=None)
