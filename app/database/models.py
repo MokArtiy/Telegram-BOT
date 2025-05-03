@@ -1,11 +1,12 @@
 from sqlalchemy import BigInteger, DateTime, String, ForeignKey, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, relationship, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
 from aiogram.types import contact
 
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 engine = create_async_engine(url=os.getenv('SQLALCHEMY_URL'))
@@ -22,12 +23,13 @@ class User(Base):
     __tablename__ = 'user'
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    tg_id = mapped_column(BigInteger, nullable=False)
+    tg_id = mapped_column(BigInteger, unique=True, nullable=False)
     first_name: Mapped[str] = mapped_column(nullable=False)
     username: Mapped[str] = mapped_column(nullable=True)
     phone_number: Mapped[str] = mapped_column(nullable=True, default=None)
     description: Mapped[str] = mapped_column(String(70), nullable=True, default=None)
     banned: Mapped[bool] = mapped_column(default=False, nullable=False)
+    tasks: Mapped[list["Task"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 class Sending(Base):
     __tablename__ = 'sending'
@@ -59,6 +61,18 @@ class Preset(Base):
     preset_id: Mapped[int] = mapped_column(nullable=False)
     preset_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     preset_name: Mapped[str] = mapped_column(String(32), nullable=True, default=None)
+
+class Task(Base):
+    __tablename__ = 'task'
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    task_id: Mapped[int] = mapped_column(nullable=False)
+    user_id = mapped_column(BigInteger, ForeignKey('user.tg_id'), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, default=None)
+    description: Mapped[str] = mapped_column(String(1024), nullable=False, default=None)
+    deadline: Mapped[datetime] = mapped_column(nullable=False, default=None)
+    is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    user: Mapped["User"] = relationship(back_populates="tasks")
 
 #DB-FUNCTIONS
 async def create_db():

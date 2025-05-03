@@ -3,6 +3,7 @@
 /__pycache__
 /.idea
 /video
+/alembic
 /app/__pycache__
 /app/database/__pycache__
 /app/handlers/__pycache__

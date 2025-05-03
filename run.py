@@ -147,8 +147,13 @@ dp.callback_query.register(input_key.input_key, F.data == 'input_key')
 dp.callback_query.register(input_key.get_gift, F.data == 'get_gift')
 dp.message.register(input_key.check_key, SecretKey.input_key)
 
+#tools
+dp.callback_query.register(tools.return_to_tools, F.data == 'return_to_tools')
+dp.callback_query.register(tools.tools_main_menu, F.data == 'utils')
+#todo
+dp.callback_query.register(tools.todo_main, F.data == 'todo_main')
+
 #plug
-dp.callback_query.register(tools.plug, F.data == 'utils')
 dp.callback_query.register(support.plug, F.data == 'support_team')
 dp.callback_query.register(my_profile.plug, F.data == 'my_profile')
 
