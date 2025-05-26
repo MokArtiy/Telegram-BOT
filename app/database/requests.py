@@ -1,5 +1,5 @@
 from app.database.models import async_session
-from app.database.models import User, Sending, Preset, Recipient
+from app.database.models import User, Sending, Preset, Recipient, Task
 from sqlalchemy import select
 
 
@@ -215,3 +215,26 @@ async def remove_current_preset(sending_id: str, preset_id: str):
             await session.delete(recipient)
         sending.sending_preset_id = None
         await session.commit()
+        
+#---------------------------------------------------
+#TASKS TO-DO
+#---------------------------------------------------
+
+async def set_task(task_id: str, user_id: str):
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        
+        if not task:
+            session.add(Task(task_id=task_id, user_id=user_id))
+            await session.commit()
+        
+        return await session.scalar(select(Task).where(Task.task_id == task_id))
+
+async def get_unsave_task(task_id: str = None, user_id: str = None) -> Task:
+    async with async_session() as session:
+        unsave_task = await session.scalar(select(Task).where(Task.task_check == False))
+        
+        if not unsave_task:
+            unsave_task = await set_task(task_id=task_id, user_id=user_id)
+        return unsave_task
+    

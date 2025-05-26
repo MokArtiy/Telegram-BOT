@@ -40,12 +40,43 @@ todo_main_kb = InlineKeyboardMarkup(
                 text='Текущие задачи', callback_data='current_tasks'
             ),
             InlineKeyboardButton(
-                text='Выполненные задачи', callback_data='archived_tasks'
+                text='Выполненные', callback_data='archived_tasks'
             )
         ],
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_tools'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+todo_add_task_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            
+            InlineKeyboardButton(
+                text='Название', callback_data='task_name'
+            ),
+            InlineKeyboardButton(
+                text='Описание', callback_data='task_description'
+            ),
+            InlineKeyboardButton(
+                text='Дедлайн', callback_data='task_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Сохранить', callback_data='task_save'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_todo'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'

@@ -68,9 +68,10 @@ class Task(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     task_id: Mapped[int] = mapped_column(nullable=False)
     user_id = mapped_column(BigInteger, ForeignKey('user.tg_id'), nullable=False)
-    name: Mapped[str] = mapped_column(String(100), nullable=False, default=None)
-    description: Mapped[str] = mapped_column(String(1024), nullable=False, default=None)
-    deadline: Mapped[datetime] = mapped_column(nullable=False, default=None)
+    task_check: Mapped[bool] = mapped_column(nullable=False, default=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
+    description: Mapped[str] = mapped_column(String(1024), nullable=True, default=None)
+    deadline: Mapped[datetime] = mapped_column(nullable=True, default=None)
     is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
     user: Mapped["User"] = relationship(back_populates="tasks")
 
