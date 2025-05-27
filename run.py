@@ -13,7 +13,7 @@ from aiogram.fsm.context import FSMContext
 from app.database.models import create_db, drop_db, async_session
 from app.utils.commands import set_commands
 from app.handlers import start, gpt_tasks, admin_panel, input_key, tools, my_profile, support
-from app.states.states import WorkGPT, InfAboutFriend, SecretKey, AdminPanel
+from app.states.states import WorkGPT, InfAboutFriend, SecretKey, AdminPanel, ToDo
 
 
 load_dotenv()
@@ -153,8 +153,11 @@ dp.callback_query.register(tools.tools_main_menu, F.data == 'utils')
 
 #todo
 dp.callback_query.register(tools.return_to_todo, F.data == 'return_to_todo')
+dp.callback_query.register(tools.return_from_edit_task_kb, F.data == 'return_to_create_task')
 dp.callback_query.register(tools.todo_main, F.data == 'todo_main')
 dp.callback_query.register(tools.add_task, F.data == 'add_task')
+dp.callback_query.register(tools.edit_name_task, F.data == 'task_name')
+dp.message.register(tools.input_name_task, ToDo.edit_name)
 
 #plug
 dp.callback_query.register(support.plug, F.data == 'support_team')

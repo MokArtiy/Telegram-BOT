@@ -27,3 +27,7 @@ class AdminPanel(StatesGroup):
 class SecretKey(StatesGroup):
     input_key = State()
     message_id = State()
+    
+class ToDo(StatesGroup):
+    edited_message_id = State()
+    edit_name = State()

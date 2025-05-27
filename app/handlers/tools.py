@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramBadRequest
 from ..database import requests as rq
 from ..database.requests import check_ban_user
 from ..keyboards import tools_kb
-from ..states.states import WorkGPT, InfAboutFriend
+from ..states.states import ToDo
 from ..utils import get_media as gm
 
 async def return_to_tools(callback: CallbackQuery, state: FSMContext):
@@ -83,7 +83,39 @@ async def todo_main(callback: CallbackQuery):
         ), 
         reply_markup=tools_kb.todo_main_kb
     )
+
+async def return_from_edit_task_kb(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+        
+    await state.clear()
+    await callback.answer('')
     
+    task_id = str(uuid.uuid4())
+    user_id = callback.from_user.id
+    task = await rq.get_unsave_task(task_id=task_id, user_id=user_id)
+    name = task.name if task.name is not None else '🚫'
+    description = task.description if task.description is not None else '🚫'
+    deadline = '✔️' if task.deadline is not None else '🚫'
+    status = 'сохранено' if task.task_check is True else 'не сохранено'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Это меню добавления новых задач в ваш список дел.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн*: {deadline}\n'
+                    f'*Статус*: {status}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_add_task_kb
+    )
+
 async def add_task(callback: CallbackQuery):
     if (await check_ban_user(callback.from_user.id)):
         await callback.answer('')
@@ -114,3 +146,62 @@ async def add_task(callback: CallbackQuery):
         ),
         reply_markup=tools_kb.todo_add_task_kb
     )
+
+#EDIT NAME TASK
+async def edit_name_task(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    await state.set_state(ToDo.edited_message_id)
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Хорошо, отправьте мне новое название для вашей задачи, только не забывайте об ограничении в *100* символов!\n'
+                    '```⚠️Примечение⚠️ Чтобы вернуть стандартное название - введите None```',
+            parse_mode='markdown'
+        )
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.edit_name)
+    
+async def input_name_task(message: Message, state: FSMContext):
+    task_id = (await rq.get_unsave_task()).task_id
+    data = await state.get_data()
+    
+    if message.content_type == 'text':
+        if len(message.text) <= 100:
+            await rq.task_update_name(task_id=task_id, task_name=message.text, user_id=message.from_user.id)
+            await gm.bot.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=data['edited_message_id'],
+                media=InputMediaPhoto(
+                    media=gm.Media_tg.tools_photo,
+                    caption='Успех! Имя рассылки успешно обновлено!'
+                ),
+                reply_markup=tools_kb.return_from_edit_task_kb
+            )
+            await state.clear()
+        else:
+            await gm.bot.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=data['edited_message_id'],
+                media=InputMediaPhoto(
+                    media=gm.Media_tg.tools_photo,
+                    caption='Имя задачи не должно превышать *100* символов! Попробуйте снова...',
+                    parse_mode='markdown'
+                ),
+                reply_markup=tools_kb.return_from_edit_task_kb
+            )
+    else:
+        await gm.bot.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Название должно содержать только текст! Попробуйте снова...',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_edit_task_kb
+        )
+    
+    await message.delete()
+    
+#EDIT DESCRIPTION TASK

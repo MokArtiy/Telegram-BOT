@@ -84,3 +84,17 @@ todo_add_task_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+return_from_edit_task_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)

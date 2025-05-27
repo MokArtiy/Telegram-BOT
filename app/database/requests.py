@@ -1,6 +1,6 @@
 from app.database.models import async_session
 from app.database.models import User, Sending, Preset, Recipient, Task
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 #USER
@@ -225,7 +225,9 @@ async def set_task(task_id: str, user_id: str):
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
         
         if not task:
-            session.add(Task(task_id=task_id, user_id=user_id))
+            count = await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))
+            task_name = f'Задача №{count if count != 0 else 1}'
+            session.add(Task(task_id=task_id, user_id=user_id, name=task_name))
             await session.commit()
         
         return await session.scalar(select(Task).where(Task.task_id == task_id))
@@ -237,4 +239,13 @@ async def get_unsave_task(task_id: str = None, user_id: str = None) -> Task:
         if not unsave_task:
             unsave_task = await set_task(task_id=task_id, user_id=user_id)
         return unsave_task
+    
+async def task_update_name(task_id: str, task_name: str, user_id: str):
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        if task_name == 'None':
+            task.name = f'Задача №{await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))}'
+        else:
+            task.name = task_name
+        await session.commit()
     
