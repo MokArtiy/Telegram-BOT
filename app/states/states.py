@@ -31,3 +31,4 @@ class SecretKey(StatesGroup):
 class ToDo(StatesGroup):
     edited_message_id = State()
     edit_name = State()
+    edit_description = State()

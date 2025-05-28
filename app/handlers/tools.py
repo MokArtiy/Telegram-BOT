@@ -174,7 +174,7 @@ async def input_name_task(message: Message, state: FSMContext):
                 message_id=data['edited_message_id'],
                 media=InputMediaPhoto(
                     media=gm.Media_tg.tools_photo,
-                    caption='Успех! Имя рассылки успешно обновлено!'
+                    caption='Успех! Название задачи успешно обновлено!'
                 ),
                 reply_markup=tools_kb.return_from_edit_task_kb
             )
@@ -185,7 +185,7 @@ async def input_name_task(message: Message, state: FSMContext):
                 message_id=data['edited_message_id'],
                 media=InputMediaPhoto(
                     media=gm.Media_tg.tools_photo,
-                    caption='Имя задачи не должно превышать *100* символов! Попробуйте снова...',
+                    caption='Название задачи не должно превышать *100* символов! Попробуйте снова...',
                     parse_mode='markdown'
                 ),
                 reply_markup=tools_kb.return_from_edit_task_kb
@@ -205,3 +205,50 @@ async def input_name_task(message: Message, state: FSMContext):
     await message.delete()
     
 #EDIT DESCRIPTION TASK
+async def edit_description_task(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    await state.set_data(ToDo.edited_message_id)
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Хорошо, отправьте мне новое описание вашей задачи. На вход принимаются текст до *1024* символов, '
+                    'голосовые сообщения, аудио сообщения, фотографии, документы, кружки и видео сообщения.\n'
+                    '```⚠️Примечение⚠️ Чтобы сделать описание пустым - введите None```',
+            parse_mode='markdown'
+        )
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.edit_description)
+
+async def input_description(message: Message, state: FSMContext):
+    task = await rq.get_unsave_task()
+    if message.content_type == 'photo':
+        data = await state.get_data()
+        description = (message.photo[-1]).file_id + ' photo'
+        await rq.task_update_description(task_id=task.task_id, description=description)
+        await gm.bot.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Успех! Описание задачи успешно обновлено!'
+            ),
+            reply_markup=tools_kb.return_from_edit_task_kb
+        )
+        await state.clear()
+    elif message.content_type == 'video':
+        data = await state.get_data()
+        description = message.video.file_id + ' video'
+        await rq.task_update_description(task_id=task.task_id, description=description)
+        await gm.bot.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Успех! Описание задачи успешно обновлено!'
+            ),
+            reply_markup=tools_kb.return_from_edit_task_kb
+        )
+    #elif message.content_type == 'video_note':
+        
+#  Описание переходит на клавиатуру изменения текста и медиа, внизу кнопка показать текущее сообщение, ниже "назад" и "на главную"
