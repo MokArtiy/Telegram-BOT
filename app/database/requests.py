@@ -249,12 +249,12 @@ async def task_update_name(task_id: str, task_name: str, user_id: str):
             task.name = task_name
         await session.commit()
         
-async def task_update_description(task_id: str, description: str):
+async def task_update_description_text(task_id: str, description_text: str):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
-        if description == 'None':
-            task.description = None
+        if description_text == 'None':
+            task.description_text = None
         else:
-            task.description = description
+            task.description_text = description_text
         await session.commit()
     

@@ -98,3 +98,58 @@ return_from_edit_task_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+todo_description_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Показать сообщение', callback_data='show_description_msg'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Текст описания', callback_data='description_caption'
+            ),
+            InlineKeyboardButton(
+                text='Медиа описания', callback_data='description_media'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+delete_media = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_description'
+            ),
+            InlineKeyboardButton(
+                text='Удалить медиа', callback_data='delete_media'
+            )
+        ]
+    ]
+)
+
+return_from_edit_description = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_description'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)

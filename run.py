@@ -154,9 +154,13 @@ dp.callback_query.register(tools.tools_main_menu, F.data == 'utils')
 #todo
 dp.callback_query.register(tools.return_to_todo, F.data == 'return_to_todo')
 dp.callback_query.register(tools.return_from_edit_task_kb, F.data == 'return_to_create_task')
+dp.callback_query.register(tools.return_to_create_description, F.data == 'return_to_create_description')
 dp.callback_query.register(tools.todo_main, F.data == 'todo_main')
 dp.callback_query.register(tools.add_task, F.data == 'add_task')
 dp.callback_query.register(tools.edit_name_task, F.data == 'task_name')
+dp.callback_query.register(tools.edit_description, F.data == 'task_description')
+dp.callback_query.register(tools.edit_text, F.data == 'description_caption')
+dp.message.register(tools.input_text, ToDo.edit_text)
 dp.message.register(tools.input_name_task, ToDo.edit_name)
 
 #plug

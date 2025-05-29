@@ -99,7 +99,7 @@ async def return_from_edit_task_kb(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     task = await rq.get_unsave_task(task_id=task_id, user_id=user_id)
     name = task.name if task.name is not None else '🚫'
-    description = task.description if task.description is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
     deadline = '✔️' if task.deadline is not None else '🚫'
     status = 'сохранено' if task.task_check is True else 'не сохранено'
     
@@ -130,7 +130,7 @@ async def add_task(callback: CallbackQuery):
     user_id = callback.from_user.id
     task = await rq.get_unsave_task(task_id=task_id, user_id=user_id)
     name = task.name if task.name is not None else '🚫'
-    description = task.description if task.description is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
     deadline = '✔️' if task.deadline is not None else '🚫'
     status = 'сохранено' if task.task_check is True else 'не сохранено'
     
@@ -149,6 +149,13 @@ async def add_task(callback: CallbackQuery):
 
 #EDIT NAME TASK
 async def edit_name_task(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
     await callback.answer('')
     await state.set_state(ToDo.edited_message_id)
     msg = await callback.message.edit_media(
@@ -205,50 +212,157 @@ async def input_name_task(message: Message, state: FSMContext):
     await message.delete()
     
 #EDIT DESCRIPTION TASK
-async def edit_description_task(callback: CallbackQuery, state: FSMContext):
+async def return_to_create_description(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
     await callback.answer('')
-    await state.set_data(ToDo.edited_message_id)
-    msg = await callback.message.edit_media(
+    
+    task = await rq.get_unsave_task()
+    text = task.description_text if task.description_text is not None else '🚫'
+    if len(text) > 450: text = '✔️'
+    media = '✔️' if task.description_media is not None else '🚫'
+    
+    await callback.message.edit_media(
         InputMediaPhoto(
             media=gm.Media_tg.tools_photo,
-            caption='Хорошо, отправьте мне новое описание вашей задачи. На вход принимаются текст до *1024* символов, '
-                    'голосовые сообщения, аудио сообщения, фотографии, документы, кружки и видео сообщения.\n'
-                    '```⚠️Примечение⚠️ Чтобы сделать описание пустым - введите None```',
+            caption='Выберете действие ниже ⬇️\n\n'
+                    f'*Текст:* {text}\n'
+                    f'*Медиа:* {media}\n',
             parse_mode='markdown'
-        )
+        ),
+        reply_markup=tools_kb.todo_description_kb
     )
-    await state.update_data(edited_message_id=msg.message_id)
-    await state.set_state(ToDo.edit_description)
 
-async def input_description(message: Message, state: FSMContext):
+async def edit_description(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer(
+        text='⚠️ СПРАВКА ⚠️\n\nОписание задачи может представлять из себя как комбинацию текста (до 1024 символов) '
+             'с одним любым медиа, так и просто текст (до 4096 символов).',
+        show_alert=True
+        )
+    
     task = await rq.get_unsave_task()
-    if message.content_type == 'photo':
+    text = task.description_text if task.description_text is not None else '🚫'
+    if len(text) > 450: text = '✔️'
+    media = '✔️' if task.description_media is not None else '🚫'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Выберете действие ниже ⬇️\n\n'
+                    f'*Текст:* `{text}`\n'
+                    f'*Медиа:* `{media}`\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_description_kb
+    )
+
+async def edit_text(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    task = await rq.get_unsave_task()
+    if task.description_media is not None and (task.description_media.split())[1] == 'video_note':
+        await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Вы уже прикрепили кружок к сообщению! Хотите его удалить?',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.delete_media
+        )
+    elif task.description_media is not None and (task.description_media.split())[1] == 'voice':
+        return await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Вы уже прикрепили гс к сообщению! Хотите его удалить?',
+                parse_mode='markdown'
+            ), 
+            reply_markup=tools_kb.delete_media
+        )
+    else:
+        await state.set_state(ToDo.edited_message_id)
+        msg = await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Хорошо, отправьте мне текствое описание для вашей новой задачи',
+                parse_mode='markdown'
+            )
+        )
+        await state.update_data(edited_message_id=msg.message_id)
+        await state.set_state(ToDo.edit_text)
+
+async def input_text(message: Message, state: FSMContext):
+    task = await rq.get_unsave_task()
+    
+    if message.content_type == 'text':
+        if (len(message.text) <= 1024 and task.description_media is not None) or (len(message.text) <= 4096 and task.description_media is None):
+            data = await state.get_data()
+            await rq.task_update_description_text(task_id=task.task_id, description_text=message.text)
+            await gm.bot.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=data['edited_message_id'],
+                media=InputMediaPhoto(
+                    media=gm.Media_tg.admin_photo,
+                    caption='✅ Успех! Текстовое описание было обновлено!'
+                ),
+                reply_markup=tools_kb.return_from_edit_description
+            )
+            await state.clear()
+        else:
+            data = await state.get_data()
+            if len(message.text) > 1024 and task.description_media is not None:
+                await gm.bot.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=data['message_admin_id'],
+                media=InputMediaPhoto(
+                    media=gm.Media_tg.admin_photo,
+                    caption='❌ Текст сообщения, *содержащего медиа-контент*, не должен превышать *1024* символа! Попробуйте снова...',
+                    parse_mode='markdown'
+                ),
+                reply_markup=tools_kb.return_from_edit_description
+            )
+            elif len(message.text) <= 4096 and task.description_media is None:
+                await gm.bot.edit_message_media(
+                chat_id=message.chat.id,
+                message_id=data['message_admin_id'],
+                media=InputMediaPhoto(
+                    media=gm.Media_tg.admin_photo,
+                    caption='❌ Текст сообщения *без медиа-контента* не должен превышать *4096* символов! Попробуйте снова...',
+                    parse_mode='markdown'
+                ),
+                reply_markup=tools_kb.return_from_edit_description
+            )
+    else:
         data = await state.get_data()
-        description = (message.photo[-1]).file_id + ' photo'
-        await rq.task_update_description(task_id=task.task_id, description=description)
         await gm.bot.edit_message_media(
             chat_id=message.chat.id,
             message_id=data['edited_message_id'],
             media=InputMediaPhoto(
                 media=gm.Media_tg.tools_photo,
-                caption='Успех! Описание задачи успешно обновлено!'
+                caption='❌ *Текстовое* описание должно содержать только *текст*! Это же логично блин...',
+                parse_mode='markdown'
             ),
-            reply_markup=tools_kb.return_from_edit_task_kb
+            reply_markup=tools_kb.return_from_edit_description
         )
-        await state.clear()
-    elif message.content_type == 'video':
-        data = await state.get_data()
-        description = message.video.file_id + ' video'
-        await rq.task_update_description(task_id=task.task_id, description=description)
-        await gm.bot.edit_message_media(
-            chat_id=message.chat.id,
-            message_id=data['edited_message_id'],
-            media=InputMediaPhoto(
-                media=gm.Media_tg.tools_photo,
-                caption='Успех! Описание задачи успешно обновлено!'
-            ),
-            reply_markup=tools_kb.return_from_edit_task_kb
-        )
-    #elif message.content_type == 'video_note':
         
-#  Описание переходит на клавиатуру изменения текста и медиа, внизу кнопка показать текущее сообщение, ниже "назад" и "на главную"
+    await message.delete()
+    
+    #К окну ввода текста добавить кнопки - назад - на главную - "None", то же самое проделать и с другими окнами
