@@ -69,6 +69,7 @@ class Task(Base):
     task_id: Mapped[int] = mapped_column(nullable=False)
     user_id = mapped_column(BigInteger, ForeignKey('user.tg_id'), nullable=False)
     task_check: Mapped[bool] = mapped_column(nullable=False, default=False)
+    edit_task_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     name: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
     description_text: Mapped[str] = mapped_column(String(4097), nullable=True, default=None)
     description_media: Mapped[str] = mapped_column(nullable=True, default=None)

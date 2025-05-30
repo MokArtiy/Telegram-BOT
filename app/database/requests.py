@@ -243,7 +243,7 @@ async def get_unsave_task(task_id: str = None, user_id: str = None) -> Task:
 async def task_update_name(task_id: str, task_name: str, user_id: str):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
-        if task_name == 'None':
+        if task_name == 'ac13d5af-391a-40fe-bcb8-9b2095492d66':
             task.name = f'Задача №{await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))}'
         else:
             task.name = task_name
@@ -252,9 +252,37 @@ async def task_update_name(task_id: str, task_name: str, user_id: str):
 async def task_update_description_text(task_id: str, description_text: str):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
-        if description_text == 'None':
+        if description_text == 'ac13d5af-391a-40fe-bcb8-9b2095492d66':
             task.description_text = None
         else:
             task.description_text = description_text
         await session.commit()
-    
+        
+async def task_update_description_media(task_id: str, description_media: str):
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        if description_media == 'ac13d5af-391a-40fe-bcb8-9b2095492d66':
+            task.description_media = None
+        else:
+            task.description_media = description_media
+        await session.commit()
+
+async def task_delete_description_text() -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.edit_task_check == True))
+        
+        if not task:
+            task = await session.scalar(select(Task).where(Task.task_check == False))
+        
+        task.description_text = None
+        await session.commit()
+
+async def task_delete_description_media() -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.edit_task_check == True))
+        
+        if not task:
+            task = await session.scalar(select(Task).where(Task.task_check == False))
+
+        task.description_media = None
+        await session.commit()

@@ -39,13 +39,22 @@ async def to_main(callback: CallbackQuery, state: FSMContext):
                  f'[Администратором](tg://user?id={5034740706}).',
             parse_mode='markdown')
     
-    await callback.message.edit_media(
-        InputMediaPhoto(
-            media=gm.Media_tg.main_photo,
+    if callback.message.content_type == 'video_note' or callback.message.content_type == 'voice':
+        await callback.message.delete()
+        await callback.message.answer_photo(
+            photo=gm.Media_tg.main_photo,
             caption=f"Добро пожаловать в {html.link('NewYear-Bot', 'https://t.me/new_artem_year_bot')}!\n"
             f"Выберете, что вы хотите сделать в меню ниже ⬇️",
-        ), reply_markup=main_kb.main_menu_1(callback.from_user.id)
-    )
+            reply_markup=main_kb.main_menu_1(callback.from_user.id)
+        )
+    else:
+        await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.main_photo,
+                caption=f"Добро пожаловать в {html.link('NewYear-Bot', 'https://t.me/new_artem_year_bot')}!\n"
+                f"Выберете, что вы хотите сделать в меню ниже ⬇️",
+            ), reply_markup=main_kb.main_menu_1(callback.from_user.id)
+        )
 
 async def photo_inf(message: Message):
     photo_data = message.photo[-1]

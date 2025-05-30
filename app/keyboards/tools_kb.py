@@ -126,7 +126,21 @@ todo_description_kb = InlineKeyboardMarkup(
     ]
 )
 
-delete_media = InlineKeyboardMarkup(
+delete_description_text = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Удалить текст', callback_data='delete_description_text'
+            ),
+            InlineKeyboardButton(
+                text='Изменить медиа', callback_data='description_media'
+            )
+        ]
+    ]
+)
+
+delete_description_media = InlineKeyboardMarkup(
     inline_keyboard=
     [
         [
@@ -134,7 +148,7 @@ delete_media = InlineKeyboardMarkup(
                 text='Назад', callback_data='return_to_create_description'
             ),
             InlineKeyboardButton(
-                text='Удалить медиа', callback_data='delete_media'
+                text='Удалить медиа', callback_data='delete_description_media'
             )
         ]
     ]
@@ -146,6 +160,58 @@ return_from_edit_description = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_create_description'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_input_name = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Стандартное значение', callback_data='none_value'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_input_description = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Стандартное значение', callback_data='none_value'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_description'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_show_msg = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_from_show_msg'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
