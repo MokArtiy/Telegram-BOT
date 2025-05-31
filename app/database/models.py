@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, DateTime, String, ForeignKey, func
+from sqlalchemy import BigInteger, DateTime, String, ForeignKey, Enum as SqlEnum, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
@@ -7,6 +7,7 @@ from aiogram.types import contact
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+from enum import Enum
 
 load_dotenv()
 engine = create_async_engine(url=os.getenv('SQLALCHEMY_URL'))
@@ -62,6 +63,13 @@ class Preset(Base):
     preset_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     preset_name: Mapped[str] = mapped_column(String(32), nullable=True, default=None)
 
+# ToDo
+class RepeatInterval(str, Enum):
+    NONE = "none"
+    DAILY = "dayly"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
 class Task(Base):
     __tablename__ = 'task'
     
@@ -74,6 +82,8 @@ class Task(Base):
     description_text: Mapped[str] = mapped_column(String(4097), nullable=True, default=None)
     description_media: Mapped[str] = mapped_column(nullable=True, default=None)
     deadline: Mapped[datetime] = mapped_column(nullable=True, default=None)
+    repeat_interval: Mapped[RepeatInterval] = mapped_column(SqlEnum(RepeatInterval), default=RepeatInterval.NONE)
+    next_notification: Mapped[datetime] = mapped_column(nullable=True, default=None)
     is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
     user: Mapped["User"] = relationship(back_populates="tasks")
 

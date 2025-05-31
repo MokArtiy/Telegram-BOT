@@ -11,8 +11,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app.database.models import create_db, drop_db, async_session
+from app.handlers.tools import tools, todo
 from app.utils.commands import set_commands
-from app.handlers import start, gpt_tasks, admin_panel, input_key, tools, my_profile, support
+from app.handlers import start, gpt_tasks, admin_panel, input_key, my_profile, support
 from app.states.states import WorkGPT, InfAboutFriend, SecretKey, AdminPanel, ToDo
 
 
@@ -152,23 +153,24 @@ dp.callback_query.register(tools.return_to_tools, F.data == 'return_to_tools')
 dp.callback_query.register(tools.tools_main_menu, F.data == 'utils')
 
 #todo
-dp.callback_query.register(tools.return_to_todo, F.data == 'return_to_todo')
-dp.callback_query.register(tools.return_from_edit_task_kb, F.data == 'return_to_create_task')
-dp.callback_query.register(tools.return_to_create_description, F.data == 'return_to_create_description')
-dp.callback_query.register(tools.todo_main, F.data == 'todo_main')
-dp.callback_query.register(tools.add_task, F.data == 'add_task')
-dp.callback_query.register(tools.input_none_value, F.data == 'none_value')
-dp.callback_query.register(tools.edit_name_task, F.data == 'task_name')
-dp.callback_query.register(tools.edit_description, F.data == 'task_description')
-dp.callback_query.register(tools.edit_text, F.data == 'description_caption')
-dp.callback_query.register(tools.edit_media, F.data == 'description_media')
-dp.callback_query.register(tools.delete_description_text, F.data == 'delete_description_text')
-dp.callback_query.register(tools.delete_description_media, F.data == 'delete_description_media')
-dp.callback_query.register(tools.show_description_msg, F.data == 'show_description_msg')
-dp.callback_query.register(tools.return_from_show_msg, F.data == 'return_from_show_msg')
-dp.message.register(tools.input_media, ToDo.edit_media)
-dp.message.register(tools.input_text, ToDo.edit_text)
-dp.message.register(tools.input_name_task, ToDo.edit_name)
+dp.callback_query.register(todo.return_to_todo, F.data == 'return_to_todo')
+dp.callback_query.register(todo.return_from_edit_task_kb, F.data == 'return_to_create_task')
+dp.callback_query.register(todo.return_to_create_description, F.data == 'return_to_create_description')
+dp.callback_query.register(todo.todo_main, F.data == 'todo_main')
+dp.callback_query.register(todo.add_task, F.data == 'add_task')
+dp.callback_query.register(todo.input_none_value, F.data == 'none_value')
+dp.callback_query.register(todo.edit_name_task, F.data == 'task_name')
+dp.callback_query.register(todo.edit_description, F.data == 'task_description')
+dp.callback_query.register(todo.edit_text, F.data == 'description_caption')
+dp.callback_query.register(todo.edit_media, F.data == 'description_media')
+dp.callback_query.register(todo.delete_description_text, F.data == 'delete_description_text')
+dp.callback_query.register(todo.delete_description_media, F.data == 'delete_description_media')
+dp.callback_query.register(todo.show_description_msg, F.data == 'show_description_msg')
+dp.callback_query.register(todo.return_from_show_msg, F.data == 'return_from_show_msg')
+dp.callback_query.register(todo.edit_deadline, F.data == 'task_deadline')
+dp.message.register(todo.input_media, ToDo.edit_media)
+dp.message.register(todo.input_text, ToDo.edit_text)
+dp.message.register(todo.input_name_task, ToDo.edit_name)
 
 #plug
 dp.callback_query.register(support.plug, F.data == 'support_team')

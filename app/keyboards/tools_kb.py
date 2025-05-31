@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 tools_main_kb = InlineKeyboardMarkup(
     inline_keyboard=
@@ -212,6 +212,33 @@ return_from_show_msg = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_from_show_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+task_deadline_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Инструкция 📖', web_app=WebAppInfo(url='https://mokartiy.github.io/Telegram-BOT/')
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Дата и время', callback_data='date_and_time'
+            ),
+            InlineKeyboardButton(
+                text='Повтор', callback_data='task_repeat'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_create_task'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
