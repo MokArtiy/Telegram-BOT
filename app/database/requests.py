@@ -2,6 +2,8 @@ from app.database.models import async_session
 from app.database.models import User, Sending, Preset, Recipient, Task
 from sqlalchemy import select, func
 
+from datetime import datetime
+
 
 #USER
 async def set_user(tg_id: int, first_name: str, username: str = '') -> None:
@@ -285,4 +287,11 @@ async def task_delete_description_media() -> None:
             task = await session.scalar(select(Task).where(Task.task_check == False))
 
         task.description_media = None
+        await session.commit()
+
+async def task_update_deadline(task_id: str, deadline: datetime) -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+            
+        task.deadline = deadline
         await session.commit()

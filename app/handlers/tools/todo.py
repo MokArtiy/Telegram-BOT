@@ -1,6 +1,7 @@
 import asyncio
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
+import dateparser
 
 from aiogram import F, html
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
@@ -639,7 +640,52 @@ async def return_from_show_msg(callback: CallbackQuery, state: FSMContext):
     )
     
 # INPUT DEADLINE
-async def edit_deadline(callback: CallbackQuery, state: FSMContext):
+async def return_to_edit_deadline(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
+    await callback.answer('')
+    
+    deadline = (await rq.get_unsave_task()).deadline if (await rq.get_unsave_task()).deadline is not None else '🚫'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Здесь вы можете задать сроки выполнения задачи.\nПеред началом редактирования рекомендуется ознакомиться с инструкцией 📖\n\n'
+                    f'*Дата:* {deadline}',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.task_deadline_kb
+    )
+
+async def edit_deadline(callback: CallbackQuery):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    
+    deadline = (await rq.get_unsave_task()).deadline if (await rq.get_unsave_task()).deadline is not None else '🚫'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Здесь вы можете задать сроки выполнения задачи.\nПеред началом редактирования рекомендуется ознакомиться с инструкцией 📖\n\n'
+                    f'*Дата:* {deadline}',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.task_deadline_kb
+    )
+    
+async def edit_date_and_time(callback: CallbackQuery, state: FSMContext):
     if (await check_ban_user(callback.from_user.id)):
         await callback.answer('')
         return await callback.message.answer(
@@ -653,8 +699,142 @@ async def edit_deadline(callback: CallbackQuery, state: FSMContext):
     msg = await callback.message.edit_media(
         InputMediaPhoto(
             media=gm.Media_tg.tools_photo,
-            caption='Здесь вы можете задать сроки выполнения задачи. Перед началом редактирования рекомендуется ознакомиться с инструкцией 📖',
+            caption='Введите полную дату сроков задачи или воспользуйтесь готовыми шаблонами 🕐.\n'
+                    '💡*Пример: * `31.05.2025 19:51`',
             parse_mode='markdown'
         ),
-        reply_markup=tools_kb.task_deadline_kb
+        reply_markup=tools_kb.patterns_deadline_kb
     )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.input_date)
+
+async def input_deadline(message: Message, state: FSMContext):
+    try:
+        task = await rq.get_unsave_task()
+        text = message.text.lower()
+        data = await state.get_data() 
+        deadline = dateparser.parse(text, languages=['ru'])
+        if not deadline:
+            raise ValueError("Неверный формат даты")
+        
+        await rq.task_update_deadline(task_id=task.task_id, deadline=deadline.replace(microsecond=0))
+        await gm.bot.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'✅ Успех! Сроки задачи успешно обновлены!',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_input_date
+        )
+        await state.clear()
+        await message.delete()
+        
+    except Exception as e:
+        data = await state.get_data() 
+        await gm.bot.edit_message_media(
+            chat_id=message.chat.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'❌ *Ошибка:* {e}. Попробуйте снова или обратитесь к [администратору](tg://user?id={5034740706}) бота.',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.patterns_deadline_kb
+        )
+
+async def deadline_today(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+        
+    deadline = datetime.combine(datetime.today(), datetime.max.time())
+    task = await rq.get_unsave_task()
+    data = await state.get_data()
+    await rq.task_update_deadline(task_id=task.task_id, deadline=deadline.replace(microsecond=0))
+    await gm.bot.edit_message_media(
+            chat_id=callback.from_user.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'✅ Успех! Сроки задачи успешно обновлены!',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_input_date
+        )
+    await state.clear()
+    
+async def deadline_tomorrow(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+        
+    deadline = datetime.combine(datetime.today() + timedelta(days=1), datetime.max.time())
+    task = await rq.get_unsave_task()
+    data = await state.get_data()
+    await rq.task_update_deadline(task_id=task.task_id, deadline=deadline.replace(microsecond=0))
+    await gm.bot.edit_message_media(
+            chat_id=callback.from_user.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'✅ Успех! Сроки задачи успешно обновлены!',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_input_date
+        )
+    await state.clear()
+
+async def deadline_week(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+        
+    deadline = datetime.combine(datetime.today() + timedelta(weeks=1), datetime.max.time())
+    task = await rq.get_unsave_task()
+    data = await state.get_data()
+    await rq.task_update_deadline(task_id=task.task_id, deadline=deadline.replace(microsecond=0))
+    await gm.bot.edit_message_media(
+            chat_id=callback.from_user.id,
+            message_id=data['edited_message_id'],
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'✅ Успех! Сроки задачи успешно обновлены!',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_input_date
+        )
+    await state.clear()
+
+
+async def task_repeat(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    await state.set_state(ToDo.edited_message_id)
+    
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Выберете интервал повторения уведомлений ⬇️.',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.repeat_deadline_kb
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.input_date)

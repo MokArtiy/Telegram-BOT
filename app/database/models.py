@@ -66,6 +66,7 @@ class Preset(Base):
 # ToDo
 class RepeatInterval(str, Enum):
     NONE = "none"
+    HOURLY = "hourly"
     DAILY = "dayly"
     WEEKLY = "weekly"
     MONTHLY = "monthly"

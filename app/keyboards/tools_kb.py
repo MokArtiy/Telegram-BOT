@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton ,WebAppInfo
 
 tools_main_kb = InlineKeyboardMarkup(
     inline_keyboard=
@@ -239,6 +239,78 @@ task_deadline_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Назад', callback_data='return_to_create_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+patterns_deadline_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Сегодня", callback_data="deadline_today"
+            ),
+            InlineKeyboardButton(
+                text="Завтра", callback_data="deadline_tomorrow"
+            ),
+            InlineKeyboardButton(
+                text="Через нед.", callback_data="deadline_week"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_deadline'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_input_date = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_deadline'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+repeat_deadline_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Ежечастно', callback_data='hourly_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Ежедневно', callback_data='daily_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Еженедельно', callback_data='weakly_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Ежемесячно', callback_data='monthly_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_edit_deadline'
             ),
             InlineKeyboardButton(
                 text='На главную', callback_data='to_main'
