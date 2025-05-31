@@ -225,7 +225,7 @@ task_deadline_kb = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Инструкция 📖', web_app=WebAppInfo(url='https://mokartiy.github.io/Telegram-BOT/')
+                text='Инструкция 📖', web_app=WebAppInfo(url='https://mokartiy.github.io/Telegram-BOT/index.html')
             )
         ],
         [
