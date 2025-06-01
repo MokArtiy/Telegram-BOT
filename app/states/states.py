@@ -34,3 +34,4 @@ class ToDo(StatesGroup):
     edit_text = State()
     edit_media = State()
     input_date = State()
+    input_repeat = State()

@@ -13,6 +13,7 @@ from aiogram.fsm.context import FSMContext
 from app.database.models import create_db, drop_db, async_session
 from app.handlers.tools import tools, todo
 from app.utils.commands import set_commands
+from app.utils import get_media as gm
 from app.handlers import start, gpt_tasks, admin_panel, input_key, my_profile, support
 from app.states.states import WorkGPT, InfAboutFriend, SecretKey, AdminPanel, ToDo
 
@@ -29,6 +30,7 @@ bot = Bot(token=TOKEN,
           default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
 dp = Dispatcher()
+scheduler = gm.scheduler
 
 async def main():
     global PARAM
@@ -48,6 +50,8 @@ async def start_bot(bot: Bot):
     await create_db()
     
     await bot.send_message(int(ADMIN_ID), text='Бот запущен')
+    
+    scheduler.start()
     
 async def stop_bot(bot: Bot):
     await bot.send_message(int(ADMIN_ID), text='Бот выключен')
@@ -174,6 +178,12 @@ dp.callback_query.register(todo.deadline_today, F.data == 'deadline_today')
 dp.callback_query.register(todo.deadline_tomorrow, F.data == 'deadline_tomorrow')
 dp.callback_query.register(todo.deadline_week, F.data == 'deadline_week')
 dp.callback_query.register(todo.task_repeat, F.data == 'task_repeat')
+dp.callback_query.register(todo.without_repeat, F.data == 'without_repeat')
+dp.callback_query.register(todo.hourly_deadline, F.data == 'hourly_deadline')
+dp.callback_query.register(todo.daily_deadline, F.data == 'daily_deadline')
+dp.callback_query.register(todo.weakly_deadline, F.data == 'weakly_deadline')
+dp.callback_query.register(todo.monthly_deadline, F.data == 'monthly_deadline')
+dp.callback_query.register(todo.save_task, F.data == 'task_save')
 dp.message.register(todo.input_media, ToDo.edit_media)
 dp.message.register(todo.input_text, ToDo.edit_text)
 dp.message.register(todo.input_name_task, ToDo.edit_name)

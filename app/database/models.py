@@ -86,6 +86,7 @@ class Task(Base):
     repeat_interval: Mapped[RepeatInterval] = mapped_column(SqlEnum(RepeatInterval), default=RepeatInterval.NONE)
     next_notification: Mapped[datetime] = mapped_column(nullable=True, default=None)
     is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    is_overdue: Mapped[bool] = mapped_column(nullable=False, default=False)
     user: Mapped["User"] = relationship(back_populates="tasks")
 
 #DB-FUNCTIONS

@@ -4,6 +4,8 @@ from sqlalchemy import select, func
 
 from datetime import datetime
 
+from .models import RepeatInterval
+
 
 #USER
 async def set_user(tg_id: int, first_name: str, username: str = '') -> None:
@@ -222,13 +224,13 @@ async def remove_current_preset(sending_id: str, preset_id: str):
 #TASKS TO-DO
 #---------------------------------------------------
 
-async def set_task(task_id: str, user_id: str):
+async def set_task(task_id: str, user_id: str = None):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
         
         if not task:
             count = await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))
-            task_name = f'Задача №{count if count != 0 else 1}'
+            task_name = f'Задача №{count + 1 if count != 0 else 1}'
             session.add(Task(task_id=task_id, user_id=user_id, name=task_name))
             await session.commit()
         
@@ -294,4 +296,46 @@ async def task_update_deadline(task_id: str, deadline: datetime) -> None:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
             
         task.deadline = deadline
+        await session.commit()
+        
+async def task_update_repeat_interval(task_id: str, repeat_interval: RepeatInterval) -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+            
+        task.repeat_interval = repeat_interval
+        await session.commit()
+
+async def task_update_next_notification(task_id: str, next_notification: datetime) -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+            
+        task.next_notification = next_notification
+        await session.commit()
+        
+async def task_update_status(task_id: str) -> int:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        if(task.description_text is not None or task.description_media is not None) and (task.name is not None) and (task.deadline is not None):
+            task.task_check = True
+        else:
+            return 0
+        await session.commit()
+        return 1
+
+async def get_task_daily(user_id: int, start_of_day: datetime, end_of_day: datetime):
+    async with async_session() as session:
+        return await session.scalars(select(Task).where(
+                    Task.user_id == user_id, 
+                    Task.is_completed == False,
+                    Task.deadline >= start_of_day,
+                    Task.deadline < end_of_day))
+
+async def get_all_active_tasks():
+    async with async_session() as session:
+        return await session.scalars(select(Task).where(Task.is_completed == False))
+    
+async def mark_task_overdue(task_id: str, overdue_check: bool):
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        task.is_expired = overdue_check
         await session.commit()

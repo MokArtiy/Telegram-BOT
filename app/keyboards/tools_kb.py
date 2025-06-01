@@ -290,22 +290,23 @@ repeat_deadline_kb = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Ежечастно', callback_data='hourly_deadline'
+                text='Каждый час', callback_data='hourly_deadline'
+            ),
+            InlineKeyboardButton(
+                text='Каждый день', callback_data='daily_deadline'
             )
         ],
         [
             InlineKeyboardButton(
-                text='Ежедневно', callback_data='daily_deadline'
+                text='Каждую неделю', callback_data='weakly_deadline'
+            ),
+            InlineKeyboardButton(
+                text='Каждый месяц', callback_data='monthly_deadline'
             )
         ],
         [
             InlineKeyboardButton(
-                text='Еженедельно', callback_data='weakly_deadline'
-            )
-        ],
-        [
-            InlineKeyboardButton(
-                text='Ежемесячно', callback_data='monthly_deadline'
+                text='Без повторения', callback_data='without_repeat'
             )
         ],
         [
