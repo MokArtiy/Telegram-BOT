@@ -5,7 +5,7 @@ import dateparser
 import logging
 
 from aiogram import F, html
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile, ReplyKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramBadRequest
 from apscheduler.triggers.date import DateTrigger
@@ -150,7 +150,7 @@ async def add_task(callback: CallbackQuery):
         reply_markup=tools_kb.todo_add_task_kb
     )
 
-async def input_none_value(callback: CallbackQuery, state: FSMContext):
+async def input_none_value_task(callback: CallbackQuery, state: FSMContext):
     if (await check_ban_user(callback.from_user.id)):
         await callback.answer('')
         return await callback.message.answer(
@@ -159,12 +159,17 @@ async def input_none_value(callback: CallbackQuery, state: FSMContext):
             parse_mode='markdown')
     
     await callback.answer('')
+    task_id = (await rq.get_unsave_task()).task_id
+    keyboards = {"description": tools_kb.return_from_edit_description, "name": tools_kb.return_from_edit_task_kb}
+    await input_none_value(task_id=task_id, callback=callback, state=state, keyboards=keyboards)
+
+async def input_none_value(task_id: str, callback: CallbackQuery, state: FSMContext, keyboards: dict[str, ReplyKeyboardMarkup]):
     current_state = await state.get_state()
     data = await state.get_data()
-    task = await rq.get_unsave_task()
+    task = await rq.get_task_by_id(task_id=task_id)
     none_key = 'ac13d5af-391a-40fe-bcb8-9b2095492d66'
     
-    if current_state == ToDo.edit_name:
+    if (current_state == ToDo.edit_name) or (current_state == ToDo.edit_current_task_name):
         await rq.task_update_name(task_id=task.task_id, task_name=none_key, user_id=callback.from_user.id)
         await gm.bot.edit_message_media(
             chat_id=callback.from_user.id,
@@ -173,10 +178,10 @@ async def input_none_value(callback: CallbackQuery, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Название задачи успешно обновлено!'
             ),
-            reply_markup=tools_kb.return_from_edit_task_kb
+            reply_markup=keyboards.get("name")
         )
         await state.clear()
-    elif current_state == ToDo.edit_text:
+    elif (current_state == ToDo.edit_text) or (current_state == ToDo.edit_current_task_text):
         await rq.task_update_description_text(task_id=task.task_id, description_text=none_key)
         await gm.bot.edit_message_media(
             chat_id=callback.from_user.id,
@@ -185,10 +190,10 @@ async def input_none_value(callback: CallbackQuery, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Текстовое описание было обновлено!'
             ),
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
-    elif current_state == ToDo.edit_media:
+    elif (current_state == ToDo.edit_media) or (current_state == ToDo.edit_current_task_media):
         await rq.task_update_description_media(task_id=task.task_id, description_media=none_key)
         await gm.bot.edit_message_media(
             chat_id=callback.from_user.id,
@@ -197,7 +202,7 @@ async def input_none_value(callback: CallbackQuery, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Медиа задачи успешно обновлено!'
             ), 
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
 
@@ -222,9 +227,9 @@ async def edit_name_task(callback: CallbackQuery, state: FSMContext):
     )
     await state.update_data(edited_message_id=msg.message_id)
     await state.set_state(ToDo.edit_name)
-    
-async def input_name_task(message: Message, state: FSMContext):
-    task_id = (await rq.get_unsave_task()).task_id
+
+async def input_name(task_id: str, message: Message, state: FSMContext, keyboard: ReplyKeyboardMarkup):
+    task_id = task_id
     data = await state.get_data()
     
     if message.content_type == 'text':
@@ -237,7 +242,7 @@ async def input_name_task(message: Message, state: FSMContext):
                     media=gm.Media_tg.tools_photo,
                     caption='✅ Успех! Название задачи успешно обновлено!'
                 ),
-                reply_markup=tools_kb.return_from_edit_task_kb
+                reply_markup=keyboard
             )
             await state.clear()
         else:
@@ -249,7 +254,7 @@ async def input_name_task(message: Message, state: FSMContext):
                     caption='❌ Название задачи не должно превышать *100* символов! Попробуйте снова...',
                     parse_mode='markdown'
                 ),
-                reply_markup=tools_kb.return_from_edit_task_kb
+                reply_markup=keyboard
             )
     else:
         await gm.bot.edit_message_media(
@@ -260,10 +265,14 @@ async def input_name_task(message: Message, state: FSMContext):
                 caption='❌ Название должно содержать *только текст*! Попробуйте снова...',
                 parse_mode='markdown'
             ),
-            reply_markup=tools_kb.return_from_edit_task_kb
+            reply_markup=keyboard
         )
     
     await message.delete()
+ 
+async def input_name_task(message: Message, state: FSMContext):
+    task_id = (await rq.get_unsave_task()).task_id
+    await input_name(task_id=task_id, message=message, state=state, keyboard=tools_kb.return_from_edit_task_kb)
     
 #EDIT DESCRIPTION TASK
 async def return_to_create_description(callback: CallbackQuery, state: FSMContext):
@@ -364,8 +373,13 @@ async def edit_text(callback: CallbackQuery, state: FSMContext):
         await state.update_data(edited_message_id=msg.message_id)
         await state.set_state(ToDo.edit_text)
 
-async def input_text(message: Message, state: FSMContext):
-    task = await rq.get_unsave_task()
+async def input_text_task(message: Message, state: FSMContext):
+    task_id = (await rq.get_unsave_task()).task_id
+    keyboard = tools_kb.return_from_edit_description
+    await input_text(message=message, state=state, task_id=task_id, keyboard=keyboard)
+
+async def input_text(message: Message, state: FSMContext, task_id: str, keyboard: ReplyKeyboardMarkup):
+    task = await rq.get_task_by_id(task_id=task_id)
     
     if message.content_type == 'text':
         if (len(message.text) <= 1024 and task.description_media is not None) or (len(message.text) <= 4096 and task.description_media is None):
@@ -378,7 +392,7 @@ async def input_text(message: Message, state: FSMContext):
                     media=gm.Media_tg.tools_photo,
                     caption='✅ Успех! Текстовое описание было обновлено!'
                 ),
-                reply_markup=tools_kb.return_from_edit_description
+                reply_markup=keyboard
             )
             await state.clear()
         else:
@@ -392,7 +406,7 @@ async def input_text(message: Message, state: FSMContext):
                     caption='❌ Текст сообщения, *содержащего медиа-контент*, не должен превышать *1024* символа! Попробуйте снова...',
                     parse_mode='markdown'
                 ),
-                reply_markup=tools_kb.return_from_edit_description
+                reply_markup=keyboard
             )
             elif len(message.text) > 4096 and task.description_media is None:
                 await gm.bot.edit_message_media(
@@ -403,7 +417,7 @@ async def input_text(message: Message, state: FSMContext):
                     caption='❌ Текст сообщения *без медиа-контента* не должен превышать *4096* символов! Попробуйте снова...',
                     parse_mode='markdown'
                 ),
-                reply_markup=tools_kb.return_from_edit_description
+                reply_markup=keyboard
             )
     else:
         data = await state.get_data()
@@ -415,7 +429,7 @@ async def input_text(message: Message, state: FSMContext):
                 caption='❌ *Текстовое* описание должно содержать только *текст*! Это же логично блин...',
                 parse_mode='markdown'
             ),
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboard
         )
         
     await message.delete()
@@ -441,8 +455,14 @@ async def edit_media(callback: CallbackQuery, state: FSMContext):
     await state.update_data(edited_message_id=msg.message_id)
     await state.set_state(ToDo.edit_media)
 
-async def input_media(message: Message, state: FSMContext):
-    task = await rq.get_unsave_task()
+async def input_media_task(message: Message, state: FSMContext):
+    task_id = (await rq.get_unsave_task()).task_id
+    keyboards = {"description": tools_kb.return_from_edit_description, "delete": tools_kb.delete_description_text}
+    await input_media(message=message, state=state, task_id=task_id, keyboards=keyboards)
+
+async def input_media(message: Message, state: FSMContext, task_id: str, keyboards: dict[str, ReplyKeyboardMarkup]):
+    task = await rq.get_task_by_id(task_id=task_id)
+    print(await state.get_state())
     if message.content_type == 'photo':
         data = await state.get_data()
         description_media = (message.photo[-1]).file_id + ' photo'
@@ -454,7 +474,7 @@ async def input_media(message: Message, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Медиа задачи успешно обновлено!'
             ), 
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
     elif message.content_type == 'video':
@@ -468,7 +488,7 @@ async def input_media(message: Message, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Медиа задачи успешно обновлено!'
             ), 
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
     elif message.content_type == 'video_note':
@@ -484,7 +504,7 @@ async def input_media(message: Message, state: FSMContext):
                             ' Удалите параметр *текст* или измените медиа файл!',
                     parse_mode='markdown'
                 ), 
-                reply_markup=tools_kb.delete_description_text
+                reply_markup=keyboards.get("delete")
             )
         else:
             description_media = message.video_note.file_id + ' video_note'
@@ -496,7 +516,7 @@ async def input_media(message: Message, state: FSMContext):
                     media=gm.Media_tg.tools_photo,
                     caption='✅ Успех! Медиа задачи успешно обновлено!'
                 ), 
-                reply_markup=tools_kb.return_from_edit_description
+                reply_markup=keyboards.get("description")
             )
             await state.clear()
     elif message.content_type == 'audio':
@@ -510,7 +530,7 @@ async def input_media(message: Message, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Медиа задачи успешно обновлено!'
             ), 
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
     elif message.content_type == 'voice':
@@ -526,7 +546,7 @@ async def input_media(message: Message, state: FSMContext):
                             ' Удалите параметр *текст* или измените медиа файл!',
                     parse_mode='markdown'
                 ), 
-                reply_markup=tools_kb.delete_description_text
+                reply_markup=keyboards.get("delete")
             )
         else:
             description_media = message.voice.file_id + ' voice'
@@ -538,7 +558,7 @@ async def input_media(message: Message, state: FSMContext):
                     media=gm.Media_tg.tools_photo,
                     caption='✅ Успех! Медиа задачи успешно обновлено!'
                 ), 
-                reply_markup=tools_kb.return_from_edit_description
+                reply_markup=keyboards.get("description")
             )
             await state.clear()
     elif message.content_type == 'document':
@@ -552,7 +572,7 @@ async def input_media(message: Message, state: FSMContext):
                 media=gm.Media_tg.tools_photo,
                 caption='✅ Успех! Медиа задачи успешно обновлено!'
             ), 
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         await state.clear()
     else:
@@ -565,7 +585,7 @@ async def input_media(message: Message, state: FSMContext):
                 caption='❌ Отправленное вами сообщение не подходит под обрабатываемые типы медиа! Попробуйте снова...',
                 parse_mode='markdown'
             ),
-            reply_markup=tools_kb.return_from_edit_description
+            reply_markup=keyboards.get("description")
         )
         
     await message.delete()
@@ -596,7 +616,7 @@ async def delete_description_media(callback: CallbackQuery, state: FSMContext):
         reply_markup=tools_kb.return_from_edit_description
     )
 
-async def show_description_msg(callback: CallbackQuery, state: FSMContext):
+async def show_description_task_msg(callback: CallbackQuery, state: FSMContext):
     if (await check_ban_user(callback.from_user.id)):
         await callback.answer('')
         return await callback.message.answer(
@@ -604,9 +624,17 @@ async def show_description_msg(callback: CallbackQuery, state: FSMContext):
                  f'[Администратором](tg://user?id={5034740706}).',
             parse_mode='markdown')
     
-    task = await rq.get_unsave_task()
+    task_id = (await rq.get_unsave_task()).task_id
+    keyboard = tools_kb.return_from_show_msg
+    await show_description_msg(callback=callback, state=state, task_id=task_id, keyboard=keyboard)
+
+async def show_description_msg(callback: CallbackQuery, state: FSMContext, task_id: str, keyboard: ReplyKeyboardMarkup):
+    task = await rq.get_task_by_id(task_id=task_id)
     disable_notification = True
-       
+    
+    if (task.description_text is None) and (task.description_media is None):
+        return await callback.answer('⚠️ ОШИБКА! ⚠️\n\nУ сообщения нет ни одного из элементов описания!', show_alert=True)
+    
     await callback.answer('')
     await callback.message.delete()
     if task.description_media is not None:
@@ -617,46 +645,46 @@ async def show_description_msg(callback: CallbackQuery, state: FSMContext):
                 photo=media_uid,
                 caption=task.description_text,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
         elif type_media == 'video':
             await callback.message.answer_video(
                 video=media_uid,
                 caption=task.description_text,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
         elif type_media == 'video_note':
             await callback.message.answer_video_note(
                 video_note=media_uid,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
         elif type_media == 'audio':
             await callback.message.answer_audio(
                 audio=media_uid,
                 caption=task.description_text,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
         elif type_media == 'voice':
             await callback.message.answer_voice(
                 voice=media_uid,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
         elif type_media == 'document':
             await callback.message.answer_document(
                 document=media_uid,
                 caption=task.description_text,
                 disable_notification=disable_notification,
-                reply_markup=tools_kb.return_from_show_msg
+                reply_markup=keyboard
             )
     else:
         await callback.message.answer(
             text=task.description_text,
             disable_notification=disable_notification,
-            reply_markup=tools_kb.return_from_show_msg
+            reply_markup=keyboard
         )
 async def return_from_show_msg(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
@@ -937,6 +965,8 @@ async def task_repeat(callback: CallbackQuery, state: FSMContext):
 
 def calculate_next_notification(deadline: datetime, repeat_interval: RepeatInterval) -> datetime:
     now = datetime.now()
+    if not deadline:
+        return
     if deadline > now:
         return deadline
     
@@ -1136,3 +1166,474 @@ async def send_daily_summary(user_id: int):
             )
     except Exception as e:
         logging.error(f'Ошибка в отправке утреннего уведомления: {e}')
+        
+#Current tasks
+
+async def current_tasks(callback: CallbackQuery):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Вы просматриваете свои текущие задачи.\nНажмите 👆 на название задачи, чтобы перейти в меню управления.',
+        ), 
+        reply_markup=await tools_kb.current_tasks(user_id=callback.from_user.id)
+    )
+
+async def return_to_current_tasks(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
+    await rq.task_update_edit_check(task_id=(await rq.get_task_by_edit_check()).task_id, edit_check=False)
+    await callback.answer('')
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Вы просматриваете свои текущие задачи.\nНажмите 👆 на название задачи, чтобы перейти в меню управления.',
+        ), 
+        reply_markup=await tools_kb.current_tasks(user_id=callback.from_user.id)
+    )
+
+async def show_current_task(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    
+    lost_task = await rq.get_task_by_edit_check()
+    if lost_task:
+        await rq.task_update_edit_check(task_id=lost_task.task_id, edit_check=False)
+
+    task = await rq.get_task_by_id(callback.data.split('_')[1])
+    await rq.task_update_edit_check(task_id=task.task_id, edit_check=True)
+    
+    name = task.name if task.name is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
+    deadline = task.deadline if task.deadline is not None else '🚫'
+    status = 'сохранено' if task.task_check else 'не сохранено'
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    completion = 'выполнена ✅' if task.is_completed else 'не выполнена ❌'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Вы в меню управления текущей задачей.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн:* {deadline}\n'
+                    f'*Повтор:* {repeat_interval}\n'
+                    f'*Выполнение:* {completion}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.show_task_kb
+    )
+
+async def complete_current_task(callback: CallbackQuery):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    task = await rq.get_task_by_edit_check()
+    await rq.task_update_completion(task_id=task.task_id, completion=True)
+    
+    await callback.answer('')
+    
+    name = task.name if task.name is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
+    deadline = task.deadline if task.deadline is not None else '🚫'
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Вы в меню управления текущей задачей.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн:* {deadline}\n'
+                    f'*Повтор:* {repeat_interval}\n'
+                    f'*Выполнение:* выполнена ✅\n',
+            parse_mode='markdown'
+        )
+    )
+    
+    #прогресс-бар
+    progress_msg = await callback.message.answer("🔄 Подготовка к переносу...")
+    await asyncio.sleep(0.5)
+    #обновление прогресса
+    async def update_progress(percentage: int):
+        bar = f"[{'#' * int(percentage / 10)}{' ' * (10 - int(percentage / 10))} {percentage}%]"
+        await progress_msg.edit_text(f"⏳ Перенос задачи в архив:\n{bar}")
+    background_task = asyncio.create_task(
+        _real_archive_task(task)  #задача в фоне
+    )
+    for progress in range(10, 101, 10):
+        await update_progress(progress)
+        await asyncio.sleep(0.3)  # Плавность анимации
+
+    if not background_task.done():
+        await progress_msg.edit_text("🔎 Завершаем перенос...")
+        await background_task
+    #конец анимации
+    await progress_msg.edit_text("✅ Задача перенесена в архив!")
+    await asyncio.sleep(1)
+    await progress_msg.delete()
+    
+    #основное сообщение
+    await gm.bot.edit_message_media(
+        chat_id=msg.chat.id,
+            message_id=msg.message_id,
+            media=InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption=f'Вы просматриваете свои текущие задачи.\nНажмите 👆 на название задачи, чтобы перейти в меню управления.',
+                parse_mode='markdown'
+            ),
+            reply_markup=await tools_kb.current_tasks(user_id=callback.from_user.id)
+    )
+
+async def _real_archive_task(task: Task):
+    #Фоновая задача: перенос + удаление
+    try:
+        await rq.set_archive_task(
+            task_id=task.task_id,
+            user_id=task.user_id,
+            name=task.name,
+            d_text=task.description_text,
+            d_media=task.description_media,
+            deadline=task.deadline,
+            repeat=task.repeat_interval,
+            completion=task.is_completed
+        )
+        await rq.delete_task(task_id=task.task_id)
+    except Exception as e:
+        logging.error(f"Ошибка переноса задачи {task.task_id}: {e}")
+
+async def return_to_current_task(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    
+    name = task.name if task.name is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
+    deadline = task.deadline if task.deadline is not None else '🚫'
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    completion = 'выполнена ✅' if task.is_completed else 'не выполнена ❌'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Вы в меню управления текущей задачей.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн:* {deadline}\n'
+                    f'*Повтор:* {repeat_interval}\n'
+                    f'*Выполнение:* {completion}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.show_task_kb
+    )
+
+async def edit_current_task(callback: CallbackQuery, state:FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    
+    name = task.name if task.name is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
+    deadline = task.deadline if task.deadline is not None else '🚫'
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Вы в меню редактирования текущей задачи.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн:* {deadline}\n'
+                    f'*Повтор:* {repeat_interval}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_edit_task_kb
+    )
+
+async def return_to_current_edit_task(callback: CallbackQuery, state:FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    
+    name = task.name if task.name is not None else '🚫'
+    description = '✔️' if (task.description_text is not None) or (task.description_media is not None) else '🚫'
+    deadline = task.deadline if task.deadline is not None else '🚫'
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption=f'Вы в меню редактирования текущей задачи.\nВыберете действие ниже ⬇️\n\n'
+                    f'*Название:* {name}\n'
+                    f'*Описание:* {description}\n'
+                    f'*Дедлайн:* {deadline}\n'
+                    f'*Повтор:* {repeat_interval}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_edit_task_kb
+    )
+
+async def edit_current_task_name(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    await state.set_state(ToDo.edited_message_id)
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Введите новое название для задачи, не забывайте об ограничении в *100* символов!\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.return_from_current_input_name
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.edit_current_task_name)
+
+async def input_current_task_name(message: Message, state:FSMContext):
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    await input_name(task_id=task_id, message=message, state=state, keyboard=tools_kb.return_from_edit_current_task_kb)
+
+async def none_value_current_task(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    keyboards = {"description": tools_kb.return_from_edit_current_description, "name": tools_kb.return_from_edit_current_task_kb}
+    await input_none_value(task_id=task_id, callback=callback, state=state, keyboards=keyboards)
+
+async def edit_current_task_description(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer(
+        text='⚠️ СПРАВКА ⚠️\n\nОписание задачи может представлять из себя как комбинацию текста (до 1024 символов) '
+             'с одним любым медиа, так и просто текст (до 4096 символов).',
+        show_alert=True
+        )
+    
+    task = await rq.get_task_by_edit_check()
+    text = task.description_text if task.description_text is not None else '🚫'
+    if len(text) > 450: text = '✔️'
+    media = '✔️' if task.description_media is not None else '🚫'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Выберете действие ниже ⬇️\n\n'
+                    f'*Текст:* {text}\n'
+                    f'*Медиа:* {media}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_editing_description_kb
+    )
+
+async def show_editing_description_msg(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    keyboard = tools_kb.return_from_editing_show_msg
+    await show_description_msg(callback=callback, state=state, task_id=task_id, keyboard=keyboard)
+    
+async def return_from_editing_msg(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await state.clear()
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    text = task.description_text if task.description_text is not None else '🚫'
+    if len(text) > 450: text = '✔️'
+    media = '✔️' if task.description_media is not None else '🚫'
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Выберете действие ниже ⬇️\n\n'
+                    f'*Текст:* {text}\n'
+                    f'*Медиа:* {media}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.todo_editing_description_kb
+    )
+
+async def editing_description_caption(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    task = await rq.get_task_by_edit_check()
+    if task.description_media is not None and (task.description_media.split())[1] == 'video_note':
+        await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='⚠️ Вы уже прикрепили кружок к сообщению! Хотите его удалить?',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.delete_description_current_media
+        )
+    elif task.description_media is not None and (task.description_media.split())[1] == 'voice':
+        return await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='⚠️ Вы уже прикрепили гс к сообщению! Хотите его удалить?',
+                parse_mode='markdown'
+            ), 
+            reply_markup=tools_kb.delete_description_current_media
+        )
+    else:
+        await state.set_state(ToDo.edited_message_id)
+        msg = await callback.message.edit_media(
+            InputMediaPhoto(
+                media=gm.Media_tg.tools_photo,
+                caption='Отправьте текствое описание для вашей новой задачи',
+                parse_mode='markdown'
+            ),
+            reply_markup=tools_kb.return_from_current_input_description
+        )
+        await state.update_data(edited_message_id=msg.message_id)
+        await state.set_state(ToDo.edit_current_task_text)
+
+async def input_current_task_text(message: Message, state: FSMContext):
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    keyboard = tools_kb.return_from_edit_current_description
+    await input_text(message=message, state=state, task_id=task_id, keyboard=keyboard)
+
+async def editing_description_media(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    await state.set_state(ToDo.edited_message_id)
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Отправьте любое медиа к вашей новой задаче',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.return_from_current_input_description
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.edit_current_task_media)
+    
+async def input_current_task_media(message: Message, state: FSMContext):
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    keyboards = {"description": tools_kb.return_from_edit_current_description, "delete": tools_kb.delete_description_current_text}
+    await input_media(message=message, state=state, task_id=task_id, keyboards=keyboards)
+
+async def delete_current_description_text(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    task_id = (await rq.get_task_by_edit_check()).task_id
+    data = await state.get_data()
+    await rq.task_update_description_media(task_id=task_id, description_media=data['edit_media'])
+    await rq.task_delete_description_text()
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='✅ Текст успешно удалён!'
+        ),
+        reply_markup=tools_kb.return_from_edit_current_description
+    )
+    await state.clear()
+
+async def delete_current_description_media(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    await rq.task_delete_description_media()
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='✅ Медиа успешно удалено!'
+        ),
+        reply_markup=tools_kb.return_from_edit_current_description
+    )
+    
+
+"""
+Admin panel - сломанное удаление текста/редактирования медиа в редактировании рассылки из меню "Управление рассылками"
+ToDo - не работает восстановление напоминаний после остановки бота
+ToDo - сделать редактирование дедлайна и повторения
+ToDo - удаление задачи (тоже перенос в архив)
+-----
+-Улучшить логи - дата, время, ник и id пользователя. Сделать запись логов в файл.
+-Сообщение в личную группу с ботом о присоединении пользователя к боту.
+-Сообщение в личную группу с ботом о критический ошибках бота и на стороне пользователя
+-Дополнительные оптимизации запросов к БД - сохранение id задачи в FSM и проверка на его наличие, если нет - запрос к БД
+"""  

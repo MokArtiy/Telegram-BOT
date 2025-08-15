@@ -30,7 +30,8 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(nullable=True, default=None)
     description: Mapped[str] = mapped_column(String(70), nullable=True, default=None)
     banned: Mapped[bool] = mapped_column(default=False, nullable=False)
-    tasks: Mapped[list["Task"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="user")
+    archive_tasks: Mapped[list["ArchiveTask"]] = relationship(back_populates="user")
 
 class Sending(Base):
     __tablename__ = 'sending'
@@ -76,7 +77,7 @@ class Task(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     task_id: Mapped[int] = mapped_column(nullable=False)
-    user_id = mapped_column(BigInteger, ForeignKey('user.tg_id'), nullable=False)
+    user_id = mapped_column(BigInteger, ForeignKey('user.tg_id', ondelete="CASCADE"), nullable=False)
     task_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     edit_task_check: Mapped[bool] = mapped_column(nullable=False, default=False)
     name: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
@@ -88,6 +89,22 @@ class Task(Base):
     is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
     is_overdue: Mapped[bool] = mapped_column(nullable=False, default=False)
     user: Mapped["User"] = relationship(back_populates="tasks")
+
+class ArchiveTask(Base):
+    __tablename__ = 'archive_task'
+    
+    #возможно потом добавить восстановление таски из архива
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    task_id: Mapped[str] = mapped_column(nullable=False)
+    user_id = mapped_column(BigInteger, ForeignKey('user.tg_id', ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
+    description_text: Mapped[str] = mapped_column(String(4097), nullable=True, default=None)
+    description_media: Mapped[str] = mapped_column(nullable=True, default=None)
+    deadline: Mapped[datetime] = mapped_column(nullable=True, default=None)
+    repeat_interval: Mapped[RepeatInterval] = mapped_column(SqlEnum(RepeatInterval), default=RepeatInterval.NONE)
+    is_completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    user: Mapped["User"] = relationship(back_populates="archive_tasks")
 
 #DB-FUNCTIONS
 async def create_db():

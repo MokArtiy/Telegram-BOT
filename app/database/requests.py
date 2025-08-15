@@ -1,5 +1,5 @@
 from app.database.models import async_session
-from app.database.models import User, Sending, Preset, Recipient, Task
+from app.database.models import User, Sending, Preset, Recipient, Task, ArchiveTask
 from sqlalchemy import select, func
 
 from datetime import datetime
@@ -243,12 +243,21 @@ async def get_unsave_task(task_id: str = None, user_id: str = None) -> Task:
         if not unsave_task:
             unsave_task = await set_task(task_id=task_id, user_id=user_id)
         return unsave_task
+
+async def get_task_by_id(task_id: str) -> Task:
+    async with async_session() as session:
+        return await session.scalar(select(Task).where(Task.task_id == task_id))
+    
+async def get_task_by_edit_check() -> Task:
+    async with async_session() as session:
+        return await session.scalar(select(Task).where(Task.edit_task_check == True))
     
 async def task_update_name(task_id: str, task_name: str, user_id: str):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
         if task_name == 'ac13d5af-391a-40fe-bcb8-9b2095492d66':
-            task.name = f'Задача №{await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))}'
+            name_by_c = f'Задача №{await session.scalar(select(func.count()).select_from(Task).where(Task.user_id == user_id))}'
+            task.name = name_by_c
         else:
             task.name = task_name
         await session.commit()
@@ -322,6 +331,20 @@ async def task_update_status(task_id: str) -> int:
         await session.commit()
         return 1
 
+async def task_update_edit_check(task_id: str, edit_check: bool) -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        
+        task.edit_task_check = edit_check
+        await session.commit()
+
+async def task_update_completion(task_id: str, completion: bool) -> None:
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+            
+        task.is_completed = completion
+        await session.commit()
+
 async def get_task_daily(user_id: int, start_of_day: datetime, end_of_day: datetime):
     async with async_session() as session:
         return await session.scalars(select(Task).where(
@@ -334,8 +357,38 @@ async def get_all_active_tasks():
     async with async_session() as session:
         return await session.scalars(select(Task).where(Task.is_completed == False))
     
+async def get_user_all_active_tasks(user_id: int):
+    async with async_session() as session:
+        return await session.scalars(select(Task).where(
+            Task.user_id == user_id,
+            Task.is_completed == False,
+            Task.task_check == True))
+    
 async def mark_task_overdue(task_id: str, overdue_check: bool):
     async with async_session() as session:
         task = await session.scalar(select(Task).where(Task.task_id == task_id))
-        task.is_expired = overdue_check
+        task.is_overdue = overdue_check
+        await session.commit()
+        
+async def delete_task(task_id: str):
+    async with async_session() as session:
+        task = await session.scalar(select(Task).where(Task.task_id == task_id))
+        await session.delete(task)
+        await session.commit()
+        
+#Archive Task
+async def set_archive_task(task_id: str, user_id: int, name: str, d_text: str,
+                           d_media: str, deadline: datetime, repeat: RepeatInterval,
+                           completion: bool):
+    async with async_session() as session:
+        session.add(ArchiveTask(
+            task_id=task_id,
+            user_id=user_id,
+            name=name,
+            description_text=d_text,
+            description_media=d_media,
+            deadline=deadline,
+            repeat_interval=repeat,
+            is_completed=completion
+        ))
         await session.commit()

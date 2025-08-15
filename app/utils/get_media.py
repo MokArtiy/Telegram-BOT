@@ -5,6 +5,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.types import FSInputFile
 from aiogram.enums import ParseMode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from ..database.models import RepeatInterval
 
 bot = Bot(token=os.getenv('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 scheduler = AsyncIOScheduler()
@@ -18,3 +19,11 @@ class Media_tg:
     tools_photo = FSInputFile('image/tools.png')
     gpt_photo = FSInputFile('image/gpt.png')
     avatar_photo = FSInputFile('image/avatar.png')
+
+repeat_map = {
+        RepeatInterval.NONE: "без повторения",
+        RepeatInterval.HOURLY: "каждый час",
+        RepeatInterval.DAILY: "каждый день",
+        RepeatInterval.WEEKLY: "каждую неделю",
+        RepeatInterval.MONTHLY: "каждый месяц"
+    }

@@ -1,4 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton ,WebAppInfo
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from ..database.requests import get_user_all_active_tasks
 
 tools_main_kb = InlineKeyboardMarkup(
     inline_keyboard=
@@ -104,7 +106,7 @@ todo_description_kb = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Показать сообщение', callback_data='show_description_msg'
+                text='Показать сообщение', callback_data='show_description_task_msg'
             )
         ],
         [
@@ -173,7 +175,7 @@ return_from_input_name = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Стандартное значение', callback_data='none_value'
+                text='Стандартное значение', callback_data='none_value_task'
             )
         ],
         [
@@ -192,7 +194,7 @@ return_from_input_description = InlineKeyboardMarkup(
     [
         [
             InlineKeyboardButton(
-                text='Стандартное значение', callback_data='none_value'
+                text='Стандартное значение', callback_data='input_none_value_task'
             )
         ],
         [
@@ -319,3 +321,202 @@ repeat_deadline_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+show_task_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Выполнить ✅', callback_data='complete_current_task'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Изменить', callback_data='edit_current_task'
+            ),
+            InlineKeyboardButton(
+                text='Удалить', callback_data='delete_current_task'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_tasks'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+todo_edit_task_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            
+            InlineKeyboardButton(
+                text='Название', callback_data='edit_current_task_name'
+            ),
+            InlineKeyboardButton(
+                text='Описание', callback_data='edit_current_task_description'
+            ),
+            InlineKeyboardButton(
+                text='Дедлайн', callback_data='edit_current_task_deadline'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_edit_current_task_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_edit_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_current_input_name = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Стандартное значение', callback_data='none_value_current_task'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_edit_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_current_input_description = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Стандартное значение', callback_data='none_value_current_task'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_from_editing_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_edit_current_description = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_from_editing_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+todo_editing_description_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Показать сообщение', callback_data='show_editing_description_msg'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Текст описания', callback_data='editing_description_caption'
+            ),
+            InlineKeyboardButton(
+                text='Медиа описания', callback_data='editing_description_media'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_edit_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+return_from_editing_show_msg = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_from_editing_msg'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+#-----------------------------------!!!!!!!!!!!!!!!!!
+delete_description_current_media = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_edit_task'
+            ),
+            InlineKeyboardButton(
+                text='Удалить медиа', callback_data='delete_current_description_media'
+            )
+        ]
+    ]
+)
+
+delete_description_current_text = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Удалить текст', callback_data='delete_current_description_text'
+            ),
+            InlineKeyboardButton(
+                text='Изменить медиа', callback_data='editing_description_media'
+            )
+        ]
+    ]
+)
+
+async def current_tasks(user_id: int):
+    all_tasks = await get_user_all_active_tasks(user_id=user_id)
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Назад', callback_data='return_to_todo'))
+    keyboard.add(InlineKeyboardButton(text='На главную', callback_data='to_main'))
+    for task in all_tasks:
+        keyboard.add(
+            InlineKeyboardButton(text=f'{task.name}', callback_data=f'current-preset_{task.task_id}')
+        )
+    return keyboard.adjust(2, 3).as_markup()
