@@ -1624,13 +1624,90 @@ async def delete_current_description_media(callback: CallbackQuery, state: FSMCo
         ),
         reply_markup=tools_kb.return_from_edit_current_description
     )
+
+async def return_to_editing_deadline(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
     
+    await state.clear()
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    deadline = task.deadline
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Здесь вы можете задать сроки выполнения задачи.\nПеред началом редактирования рекомендуется ознакомиться с инструкцией 📖\n\n'
+                    f'*Дата:* {deadline}\n'
+                    f'*Повторение:* {repeat_interval}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.edit_current_task_deadline
+    )
+
+async def edit_current_task_deadline(callback: CallbackQuery):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    
+    task = await rq.get_task_by_edit_check()
+    deadline = task.deadline
+    repeat_interval = gm.repeat_map.get(task.repeat_interval, "без повторения")
+    
+    await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Здесь вы можете задать сроки выполнения задачи.\nПеред началом редактирования рекомендуется ознакомиться с инструкцией 📖\n\n'
+                    f'*Дата:* {deadline}\n'
+                    f'*Повторение:* {repeat_interval}\n',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.edit_current_task_deadline
+    )
+
+async def editing_date_and_time(callback: CallbackQuery, state: FSMContext):
+    if (await check_ban_user(callback.from_user.id)):
+        await callback.answer('')
+        return await callback.message.answer(
+            text=f'Вы забанены в данном боте, если вы не согласны с баном, свяжитесь с '
+                 f'[Администратором](tg://user?id={5034740706}).',
+            parse_mode='markdown')
+    
+    await callback.answer('')
+    await state.set_state(ToDo.edited_message_id)
+    
+    msg = await callback.message.edit_media(
+        InputMediaPhoto(
+            media=gm.Media_tg.tools_photo,
+            caption='Введите полную дату сроков задачи или воспользуйтесь готовыми шаблонами 🕐.\n'
+                    '💡*Пример: * `31.05.2025 19:51`',
+            parse_mode='markdown'
+        ),
+        reply_markup=tools_kb.patterns_editing_deadline_kb
+    )
+    await state.update_data(edited_message_id=msg.message_id)
+    await state.set_state(ToDo.edit_current_task_date)
 
 """
 Admin panel - сломанное удаление текста/редактирования медиа в редактировании рассылки из меню "Управление рассылками"
 ToDo - не работает восстановление напоминаний после остановки бота
 ToDo - сделать редактирование дедлайна и повторения
 ToDo - удаление задачи (тоже перенос в архив)
+ToDo - добавить показ сообщений у выбранной текущей задачи
+
+ToDo - Deadline - переписать deadline_today и тд для многоразового использования
+ToDo - Deadline - переписать input_deadline для многоразового использования
 -----
 -Улучшить логи - дата, время, ник и id пользователя. Сделать запись логов в файл.
 -Сообщение в личную группу с ботом о присоединении пользователя к боту.

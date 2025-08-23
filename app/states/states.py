@@ -39,3 +39,5 @@ class ToDo(StatesGroup):
     edit_current_task_name = State()
     edit_current_task_text = State()
     edit_current_task_media = State()
+    edit_current_task_date = State()
+    edit_current_task_repeat = State()

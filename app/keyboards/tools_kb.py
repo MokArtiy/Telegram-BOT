@@ -510,6 +510,57 @@ delete_description_current_text = InlineKeyboardMarkup(
     ]
 )
 
+edit_current_task_deadline = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(
+                text='Инструкция 📖', web_app=WebAppInfo(url='https://mokartiy.github.io/Telegram-BOT/')
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Дата и время', callback_data='editing_date_and_time'
+            ),
+            InlineKeyboardButton(
+                text='Повтор', callback_data='editing_task_repeat'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_current_edit_task'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
+patterns_editing_deadline_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="Сегодня", callback_data="deadline_today"
+            ),
+            InlineKeyboardButton(
+                text="Завтра", callback_data="deadline_tomorrow"
+            ),
+            InlineKeyboardButton(
+                text="Через нед.", callback_data="deadline_week"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад', callback_data='return_to_editing_deadline'
+            ),
+            InlineKeyboardButton(
+                text='На главную', callback_data='to_main'
+            )
+        ]
+    ]
+)
+
 async def current_tasks(user_id: int):
     all_tasks = await get_user_all_active_tasks(user_id=user_id)
     keyboard = InlineKeyboardBuilder()

@@ -200,6 +200,9 @@ dp.callback_query.register(todo.editing_description_caption, F.data == 'editing_
 dp.callback_query.register(todo.editing_description_media, F.data == 'editing_description_media')
 dp.callback_query.register(todo.delete_current_description_text, F.data == 'delete_current_description_text')
 dp.callback_query.register(todo.delete_current_description_media, F.data == 'delete_current_description_media')
+dp.callback_query.register(todo.edit_current_task_deadline, F.data == 'edit_current_task_deadline')
+dp.callback_query.register(todo.editing_date_and_time, F.data == 'editing_date_and_time')
+dp.callback_query.register(todo.return_to_editing_deadline, F.data == 'return_to_editing_deadline')
 dp.callback_query.register(todo.show_current_task, F.data.startswith('current-preset_'))
 
 dp.message.register(todo.input_media_task, ToDo.edit_media)
