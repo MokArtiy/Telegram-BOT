@@ -1,4 +1,5 @@
 import os
+import json
 
 from aiogram import F, html, Bot
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
@@ -10,6 +11,7 @@ from ..keyboards import key_kb, main_kb
 from ..states.states import SecretKey
 from ..utils import get_media as gm
 
+COMPLETED_FILE = "completed_users.txt"
 
 USER_GIFT_LIST = {
     'Angelina' : '6522122306',
@@ -312,3 +314,30 @@ async def create_celebrate(message: Message):
     except Exception as e:
         # Любые другие непредвиденные ошибки
         await message.answer(f"Непредвиденная ошибка: {str(e)}")
+
+def load_completed_users():
+    if not os.path.exists(COMPLETED_FILE):
+        return set()
+    with open(COMPLETED_FILE, "r", encoding="utf-8") as f:
+        return {int(line.strip()) for line in f if line.strip().isdigit()}
+
+def save_completed_user(user_id: int):
+    with open(COMPLETED_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{user_id}\n")
+    
+async def handle_webapp_data(message: Message):
+    try:
+        data = json.loads(message.web_app_data.data)
+        if data.get("action") == "lemur_caught":
+            user_id = message.from_user.id
+            completed = load_completed_users()
+
+            if user_id not in completed:
+                save_completed_user(user_id)
+                await message.answer_video_note(
+                    video_note="DQACAgIAAxkBAAIFU2kEf_CFExfpIriuLw9iLZl3dG0CAAJKiAACWmopSH8BF4BKRuJoNgQ"
+                )
+            else:
+                await message.answer("Уверен ты уже профи в ловле лемуров! Мне очень приятно, что тебе понравилась игруля ) 💘")
+    except Exception as e:
+        print(f"Ошибка обработки WebApp данных: {e}")

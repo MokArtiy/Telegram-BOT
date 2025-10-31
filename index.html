@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Поймай лемура!</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -220,6 +221,7 @@
 
             // Этап 1: лемур появляется и ждёт 1 секунду
             if (lemur.state === 'visible') {
+                lemur.worldX = cameraX + player.x + player.width + 150;
                 if (elapsedTime > 1) {
                     lemur.state = 'escaping';
                 }
@@ -232,14 +234,14 @@
             const remainingTime = Math.max(0, gameTime - elapsedTime);
 
             // Скорость лемура: быстрее камеры в начале, медленнее — в конце
-            let lemurSpeed = 4.2; // > gameSpeed (5.0)
+            let escapeSpeed = 1.8; // относительно камеры
 
             if (remainingTime <= 10) {
                 const slowFactor = remainingTime / 10;
-                lemurSpeed = 2.5 + (1.7 * slowFactor); // от 4.2 → 2.5
+                escapeSpeed = 0.6 + (1.2 * slowFactor); // от 1.8 → 0.6
             }
 
-            lemur.worldX += lemurSpeed;
+            lemur.worldX += escapeSpeed;
         }
 
         function updateObstacles() {
@@ -285,6 +287,12 @@
                 resultTitle.textContent = "🎉 Поздравляем! 🎉";
                 resultMessage.textContent = "Вы поймали лемура!";
                 finalScoreElement.textContent = `Ваш счет: ${score + 100}`;
+                
+                setTimeout(() => {
+                    if (window.Telegram?.WebApp?.sendData) {
+                        Telegram.WebApp.sendData(JSON.stringify({ action: "lemur_caught" }));
+                    }
+                }, 2000);
             } else {
                 resultTitle.textContent = "💥 Игра окончена!";
                 resultMessage.textContent = "Попробуйте еще раз!";
@@ -430,7 +438,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            lemur.worldX = canvas.width - 200;
+            lemur.worldX = cameraX + player.x + player.width + 150;
             lemur.y = canvas.height - 130;
             lemur.state = 'visible';
             

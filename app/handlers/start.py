@@ -62,3 +62,7 @@ async def to_main(callback: CallbackQuery, state: FSMContext):
 async def photo_inf(message: Message):
     photo_data = message.photo[-1]
     await message.answer(f'{photo_data.file_id}')
+
+async def video_note_inf(message: Message):
+    video_note_data = message.video_note
+    await message.answer(f'{video_note_data.file_id}')

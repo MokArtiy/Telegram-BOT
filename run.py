@@ -64,6 +64,7 @@ dp.startup.register(start_bot)
 dp.shutdown.register(stop_bot)
 dp.message.register(start.get_start, Command(commands='start'))
 #dp.message.register(start.photo_inf, F.photo)
+dp.message.register(start.video_note_inf, F.video_note)
 dp.callback_query.register(start.to_main, F.data == 'to_main')
 
 #gpt-functions
