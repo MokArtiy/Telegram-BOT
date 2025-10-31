@@ -95,7 +95,6 @@
             <p id="resultMessage">Вы поймали лемура!</p>
             <p id="finalScore">Ваш счет: 0</p>
             <button class="button" onclick="restartGame()">Играть снова</button>
-            <button class="button" onclick="closeGame()">Вернуться в бота</button>
         </div>
     </div>
 
@@ -292,7 +291,10 @@
                 
                 setTimeout(() => {
                     if (window.Telegram?.WebApp?.sendData) {
+                        console.log("📤 Отправка данных в Telegram:", { action: "lemur_caught" });
                         Telegram.WebApp.sendData(JSON.stringify({ action: "lemur_caught" }));
+                    } else {
+                        console.log("❌ Telegram WebApp недоступен (тест вне Telegram?)");
                     }
                 }, 2000);
             } else {
@@ -453,12 +455,6 @@
             scoreElement.textContent = `Счет: ${score}`;
             timerElement.textContent = `Время: ${gameTime}`;
             gameOverScreen.style.display = 'none';
-        }
-
-        function closeGame() {
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.close();
-            }
         }
 
         // Запуск игры

@@ -154,7 +154,10 @@ dp.callback_query.register(input_key.return_to_key_from_gift, F.data == 'return_
 dp.callback_query.register(input_key.secret_key_main, F.data == 'secret_key')
 dp.callback_query.register(input_key.input_key, F.data == 'input_key')
 dp.callback_query.register(input_key.get_gift, F.data == 'get_gift')
+
+#ВРЕМЕННО УДАЛИТЬ
 dp.message.register(input_key.check_key, SecretKey.input_key)
+dp.message.register(input_key.handle_webapp_data, F.web_app_data)
 
 #tools
 dp.callback_query.register(tools.return_to_tools, F.data == 'return_to_tools')
