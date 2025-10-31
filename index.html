@@ -84,6 +84,10 @@
         <div id="timer">Время: 60</div>
         <canvas id="gameCanvas"></canvas>
         
+        <div id="loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: white; z-index: 200;">
+            Загрузка... 🦊
+        </div>
+
         <div id="gameOver">
             <img id="victoryImage" src="" alt="Победа!">
             <h2 id="resultTitle">🎉 Поздравляем! 🎉</h2>
@@ -95,6 +99,13 @@
     </div>
 
     <script>
+        function resizeCanvas() {
+            canvas.width = window.innerWidth || 320;
+            canvas.height = window.innerHeight || 568;
+        }
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
@@ -119,11 +130,11 @@
         };
 
         // ЗАМЕНИ ЭТИ URL НА СВОИ HTTPS КАРТИНКИ!
-        images.lemur.src = 'https://cdn.discordapp.com/attachments/1433580011759075449/1433580684752064572/484-4847323_lemur-png-transparent-png-download.png?ex=6905358d&is=6903e40d&hm=0cfb51125cd7188aa20df60a8d32d8ba9b451b377247870d595661469ae36ba0&';
-        images.player.src = 'https://cdn.discordapp.com/attachments/1433580011759075449/1433580038762004510/image.png?ex=690534f3&is=6903e373&hm=42365834bf051700de9fd4005a942aee45a94eb592769253598d2df121861dfc&';
-        images.obstacle.src = 'https://cdn.discordapp.com/attachments/1433580011759075449/1433584361164243127/image.png?ex=690538fa&is=6903e77a&hm=357e2c17c3a0108b5b338c06a8529a4627030fc7ebaae866cb0ce9c50f189e9b&';
-        images.victory.src = 'https://cdn.discordapp.com/attachments/1433580011759075449/1433604483874816141/image.png?ex=69054bb8&is=6903fa38&hm=0bd4b93e88b08bec9c0f7424c5a1ec9f94a77999d8faa4025176c86ce3dd15d8&';
-        images.defeat.src = 'https://cdn.discordapp.com/attachments/1433580011759075449/1433600829968875622/image.png?ex=69054850&is=6903f6d0&hm=497deb97410dd2d3fc31dd56b0f441b3b2290364b260b3756b82bdf4b5160349&';
+        images.lemur.src = 'assets/lemur-l.png';
+        images.player.src = 'assets/player-l.png';
+        images.obstacle.src = 'assets/obstacle-l.png';
+        images.victory.src = 'assets/victory-l.png';
+        images.defeat.src = 'assets/defeat-l.png';
         images.background.src = 'https://via.placeholder.com/400x300/87CEEB/FFFFFF?text=Фон';
 
         // Игровые переменные
@@ -416,6 +427,9 @@
             player.velocityY = 0;
             player.isJumping = false;
             
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
             lemur.worldX = canvas.width - 200;
             lemur.y = canvas.height - 130;
             lemur.state = 'visible';
@@ -445,6 +459,7 @@
             img.onload = () => {
                 imagesLoaded++;
                 if (imagesLoaded === totalImages) {
+                    document.getElementById('loading').style.display = 'none';
                     restartGame();
                     gameLoop(0);
                 }
@@ -452,6 +467,7 @@
             img.onerror = () => {
                 imagesLoaded++;
                 if (imagesLoaded === totalImages) {
+                    document.getElementById('loading').style.display = 'none';
                     restartGame();
                     gameLoop(0);
                 }
