@@ -144,7 +144,7 @@
         let gameTime = 60;
         let lastTimerUpdate = 0;
         let cameraX = 0;
-        let gameSpeed = 5;
+        let gameSpeed = 4;
 
         // Игровые объекты
         const player = {
@@ -153,7 +153,7 @@
             width: 80,
             height: 120,
             velocityY: 0,
-            gravity: 0.5,
+            gravity: 0.4,
             jumpPower: -15,
             isJumping: false
         };
@@ -211,7 +211,7 @@
             cameraX += gameSpeed;
             
             // Небольшое увеличение скорости со временем
-            gameSpeed = 5 + (score * 0.005);
+            gameSpeed = 3 + (score * 0.002); // было 5 + (score * 0.005)
         }
 
         function updateLemur() {
@@ -232,11 +232,11 @@
             const remainingTime = Math.max(0, gameTime - elapsedTime);
 
             // Скорость лемура: быстрее камеры в начале, медленнее — в конце
-            let lemurSpeed = 6.0; // > gameSpeed (5.0)
+            let lemurSpeed = 4.2; // > gameSpeed (5.0)
 
             if (remainingTime <= 10) {
                 const slowFactor = remainingTime / 10;
-                lemurSpeed = 4.0 + (2.0 * slowFactor); // от 6.0 → 4.0
+                lemurSpeed = 2.5 + (1.7 * slowFactor); // от 4.2 → 2.5
             }
 
             lemur.worldX += lemurSpeed;
@@ -420,7 +420,7 @@
             gameActive = true;
             gameTime = 60;
             cameraX = 0;
-            gameSpeed = 5;
+            gameSpeed = 4;
             
             player.x = 100;
             player.y = canvas.height - 150;
