@@ -219,28 +219,28 @@
             const currentTime = Date.now();
             const elapsedTime = (currentTime - gameStartTime) / 1000;
 
-            // Этап 1: лемур появляется и ждёт 1 секунду
             if (lemur.state === 'visible') {
-                lemur.worldX = cameraX + player.x + player.width + 150;
-                if (elapsedTime > 1) {
+                // Лемур "стоит" справа от игрока — его экранная позиция фиксирована
+                const desiredScreenX = player.x + player.width + 75;
+                lemur.worldX = cameraX + desiredScreenX;
+
+                if (elapsedTime > 1.5) {
                     lemur.state = 'escaping';
                 }
-                return; // больше ничего не делаем в этом состоянии
+                return;
             }
 
-            // Этап 2: лемур убегает
             if (lemur.state !== 'escaping') return;
 
             const remainingTime = Math.max(0, gameTime - elapsedTime);
-
-            // Скорость лемура: быстрее камеры в начале, медленнее — в конце
-            let escapeSpeed = 1.8; // относительно камеры
+            let escapeSpeed = gameSpeed + 0.9; // ← ключевое изменение!
 
             if (remainingTime <= 10) {
                 const slowFactor = remainingTime / 10;
-                escapeSpeed = 0.6 + (1.2 * slowFactor); // от 1.8 → 0.6
+                escapeSpeed = gameSpeed - 0.6 + (1.5 * slowFactor);
             }
 
+            // Двигаем лемура в мировых координатах вперёд
             lemur.worldX += escapeSpeed;
         }
 
@@ -438,7 +438,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            lemur.worldX = cameraX + player.x + player.width + 150;
+            lemur.worldX = cameraX + player.x + player.width + 75;
             lemur.y = canvas.height - 130;
             lemur.state = 'visible';
             
