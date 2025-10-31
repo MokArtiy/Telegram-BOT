@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 key_main_kb = InlineKeyboardMarkup(
     inline_keyboard=
@@ -35,6 +35,16 @@ return_from_gift_key_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text='Назад', callback_data='return_to_key_from_gift'),
             InlineKeyboardButton(text='На главную', callback_data='to_main_from_gift')
+        ]
+    ]
+)
+
+#ВРЕМЕННО УДАЛИТЬ
+celebrate_lemur_kb = InlineKeyboardMarkup(
+    inline_keyboard=
+    [
+        [
+            InlineKeyboardButton(text='Поймать лемура! 🦊', web_app=WebAppInfo(url="https://mokartiy.github.io/Telegram-BOT/"))
         ]
     ]
 )

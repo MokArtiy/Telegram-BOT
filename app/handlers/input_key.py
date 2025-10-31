@@ -3,6 +3,7 @@ import os
 from aiogram import F, html, Bot
 from aiogram.types import Message, CallbackQuery, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest, TelegramNetworkError
 
 from ..database.requests import check_ban_user
 from ..keyboards import key_kb, main_kb
@@ -274,3 +275,40 @@ async def get_gift(callback: CallbackQuery):
             FSInputFile(path='video/for_valeria.mp4'),
             reply_markup=key_kb.return_from_gift_key_kb
         )
+        
+
+#ВРЕМЕННО УДАЛИТЬ
+async def create_celebrate(message: Message):
+    try:
+        await gm.bot.send_photo(
+            chat_id="7606461322",
+            photo="AgACAgIAAxkBAAIFNGkD_uCMIAOHtAg-GoMEAp6sFhCEAAI__jEbWmohSFmpe7h2WtEcAQADAgADeQADNgQ",
+            caption="Люди, появившиеся на свет 31 октября, рождены под знаком Скорпиона. Они сильны, решительны и энергичны. Скорпионы редко показывают чувства, но переживают все глубоко.\n\n"
+            "Эти люди не боятся трудностей, стремятся к совершенству и умеют видеть то, что скрыто от других. Их интуиция и умение понимать людей помогают добиваться успеха в любой сфере — от искусства до политики и науки.\n\n"
+            "А ещё 31 октября - Всемирный День Лемура!!! Ииии кажется он сбежал...Помоги поймать лемура, не переживай, они хоть и быстрые, но дыхалка у них так себе )",
+            reply_markup=key_kb.celebrate_lemur_kb
+        )
+        await message.answer("Сообщение отправлено.")
+        
+    except TelegramBadRequest as e:
+        # Ошибки связанные с неправильными параметрами запроса
+        error_message = "Ошибка в параметрах запроса: "
+        if "chat not found" in str(e):
+            error_message += "чат не найден"
+        elif "file_id is invalid" in str(e):
+            error_message += "неверный ID медиафайла"
+        else:
+            error_message += str(e)
+        await message.answer(error_message)
+        
+    except TelegramNetworkError as e:
+        # Проблемы с сетью
+        await message.answer(f"Проблемы с сетью: {str(e)}")
+        
+    except TelegramAPIError as e:
+        # Другие ошибки Telegram API
+        await message.answer(f"Ошибка Telegram API: {str(e)}")
+        
+    except Exception as e:
+        # Любые другие непредвиденные ошибки
+        await message.answer(f"Непредвиденная ошибка: {str(e)}")

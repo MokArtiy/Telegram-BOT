@@ -57,6 +57,9 @@ async def stop_bot(bot: Bot):
     await bot.send_message(int(ADMIN_ID), text='Бот выключен')
     
 
+#ВРЕМЕННО УДАЛИТЬ
+dp.message.register(input_key.create_celebrate, Command(commands='create_celebrate'))
+
 dp.startup.register(start_bot)
 dp.shutdown.register(stop_bot)
 dp.message.register(start.get_start, Command(commands='start'))
