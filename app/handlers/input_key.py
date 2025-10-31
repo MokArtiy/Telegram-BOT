@@ -326,18 +326,24 @@ def save_completed_user(user_id: int):
         f.write(f"{user_id}\n")
     
 async def handle_webapp_data(message: Message):
+    print("📥 Получено WebApp-данные:", message.web_app_data.data)
+    print("👤 user_id:", message.from_user.id)
     try:
         data = json.loads(message.web_app_data.data)
+        print("📦 Распакованные данные:", data)
         if data.get("action") == "lemur_caught":
             user_id = message.from_user.id
             completed = load_completed_users()
+            print("✅ Загружен список завершивших:", completed)
 
             if user_id not in completed:
+                print("🆕 Новый пользователь! Сохраняю и отправляю видео...")
                 save_completed_user(user_id)
                 await message.answer_video_note(
                     video_note="DQACAgIAAxkBAAIFU2kEf_CFExfpIriuLw9iLZl3dG0CAAJKiAACWmopSH8BF4BKRuJoNgQ"
                 )
             else:
+                print("🔁 Пользователь уже играл.")
                 await message.answer("Уверен ты уже профи в ловле лемуров! Мне очень приятно, что тебе понравилась игруля ) 💘")
     except Exception as e:
-        print(f"Ошибка обработки WebApp данных: {e}")
+        print(f"❌ Ошибка: {e}")
