@@ -155,6 +155,17 @@ dp.callback_query.register(input_key.return_to_key_from_gift, F.data == 'return_
 dp.callback_query.register(input_key.secret_key_main, F.data == 'secret_key')
 dp.callback_query.register(input_key.input_key, F.data == 'input_key')
 dp.callback_query.register(input_key.get_gift, F.data == 'get_gift')
+
+#ВРЕМЕННО УДАЛИТЬ
+dp.callback_query.register(input_key.read_messages, F.data == 'read_messages')
+dp.callback_query.register(input_key.four_msg, F.data == 'four_msg')
+dp.callback_query.register(input_key.free_msg, F.data == 'free_msg')
+dp.callback_query.register(input_key.two_msg, F.data == 'two_msg')
+dp.callback_query.register(input_key.one_msg, F.data == 'one_msg')
+dp.callback_query.register(input_key.final_msg, F.data == 'final_code_msg')
+dp.callback_query.register(input_key.input_final_code, F.data == 'final_msg')
+dp.message.register(input_key.code_final, SecretKey.input_final_key)
+
 dp.message.register(input_key.check_key, SecretKey.input_key)
 
 #tools

@@ -129,17 +129,18 @@ async def check_key(message: Message, state: FSMContext):
     data = await state.get_data()
     if message.text in GIFT_KEYS.values():
         if message.text == GIFT_KEYS['Angelina']:
-            if message.from_user.id == int(USER_GIFT_LIST['Angelina']):
+            if message.from_user.id == int(USER_GIFT_LIST['MokArtiy']):
                 await message.delete()
                 await gm.bot.edit_message_media(
                     chat_id=message.chat.id, 
                     message_id=data['message_id'],
                     media=InputMediaPhoto(
                         media=gm.Media_tg.key_photo,
-                        caption='Подарочный ключ на новогоднее поздравление для Ангелины был успешно применён!\n'
-                                'Чтобы забрать подарок, выберете действие ниже ⬇️',
+                        # caption='Подарочный ключ на новогоднее поздравление для Ангелины был успешно применён!\n'
+                        #         'Чтобы забрать подарок, выберете действие ниже ⬇️',
+                        caption='У вас 6 непрочитанных сообщений...'
                     ),
-                    reply_markup=key_kb.get_gift           
+                    reply_markup=key_kb.read_from_key           
                 )
                 await state.clear()
             else:
@@ -288,7 +289,7 @@ async def create_celebrate(message: Message):
             caption="Люди, появившиеся на свет 31 октября, рождены под знаком Скорпиона. Они сильны, решительны и энергичны. Скорпионы редко показывают чувства, но переживают все глубоко.\n\n"
             "Эти люди не боятся трудностей, стремятся к совершенству и умеют видеть то, что скрыто от других. Их интуиция и умение понимать людей помогают добиваться успеха в любой сфере — от искусства до политики и науки.\n\n"
             "А ещё 31 октября - Всемирный День Лемура!!! Ииии кажется он сбежал...Помоги поймать лемура, не переживай, они хоть и быстрые, но дыхалка у них так себе )",
-            reply_markup=key_kb.celebrate_lemur_kb
+            reply_markup=key_kb.celebrate_lemur
         )
         await message.answer("Сообщение отправлено.")
         
@@ -344,6 +345,63 @@ async def handle_webapp_data(message: Message):
                 )
             else:
                 print("🔁 Пользователь уже играл.")
-                await message.answer("Уверен ты уже профи в ловле лемуров! Мне очень приятно, что тебе понравилась игруля ) 💘")
+                await message.answer("Уверен ты уже профи в ловле лемуров! Рад, что тебе понравилась игруля ) 💘")
     except Exception as e:
         print(f"❌ Ошибка: {e}")
+        
+async def read_messages(callback: CallbackQuery):
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFfWkEmYE5AZITrorFISPgpvNXrigoAAKXhgACWmopSPazAhs3Ps3KNgQ',
+        reply_markup=key_kb.four_msg
+    )
+
+async def four_msg(callback: CallbackQuery): #достаток
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFf2kEodpxoapXbguiEorAc8jCqzrxAALMiwACWmopSBOcAUNplfH8NgQ',
+        reply_markup=key_kb.free_msg
+    )
+    
+async def free_msg(callback: CallbackQuery): #черные/белые полосы
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFgWkEo0SuaDFvJjVcULryHTv3iFYqAALciwACWmopSFYR9U7sIRxVNgQ',
+        reply_markup=key_kb.two_msg
+    )
+    
+async def two_msg(callback: CallbackQuery): #никого не слушай
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFg2kEpDdQHxdBPxxAOiH0zBZfFfxJAALpiwACWmopSAhagvF8XzAqNgQ',
+        reply_markup=key_kb.one_msg
+    )
+    
+async def one_msg(callback: CallbackQuery): #позитив
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFhWkEpWpB9XuAT3qasSmXpPFXy16FAAICjAACWmopSGcSUTAe2So4NgQ',
+        reply_markup=key_kb.final_code_msg
+    )
+    
+async def final_msg(callback: CallbackQuery): #финалочка
+    await callback.answer('')
+    await callback.message.answer_video_note(
+        video_note='DQACAgIAAxkBAAIFh2kEpqah2DnxinYGazeVhUL0mcN2AAImjAACWmopSLDOCAw06kYmNgQ',
+        reply_markup=key_kb.final_msg
+    )
+    
+async def input_final_code(callback: CallbackQuery, state: FSMContext):
+    await callback.answer('')
+    await callback.message.answer(text="Введи код, у тебя одна попытка!")
+    await state.set_state(SecretKey.input_final_key)
+    
+async def code_final(message: Message, state: FSMContext):
+    if message.text == "31-A-10-N-25-G-4-E-u-L":
+        await state.clear()
+        await gm.bot.send_message(chat_id="5034740706", text="Код активирован!")
+        await message.answer("Успех, код активирован! Теперь немного подожди 🥳")
+        await message.answer_video_note(video_note="DQACAgIAAxkBAAIFlmkEwaHS7JlTjLR7NLLom77Y3x1rAALTjQACWmopSIl_YwEMFbAHNgQ")
+    else:
+        await message.answer("Ладно, подумай ещё и введи снова...")
+        await gm.bot.send_message(chat_id="5034740706", text="Она ошиблась епта")
