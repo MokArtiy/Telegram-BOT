@@ -66,3 +66,7 @@ async def photo_inf(message: Message):
 async def video_note_inf(message: Message):
     video_note_data = message.video_note
     await message.answer(f'{video_note_data.file_id}')
+    
+async def audio_inf(message: Message):
+    audio_data = message.audio
+    await message.answer(f'{audio_data.file_id}')

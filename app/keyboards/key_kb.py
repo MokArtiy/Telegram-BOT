@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 key_main_kb = InlineKeyboardMarkup(
     inline_keyboard=
@@ -29,7 +30,7 @@ get_gift = InlineKeyboardMarkup(
     ]
 )
 
-#ВРЕМЕННО УДАЛИТЬ
+#ДЕНЬ РОЖДЕНИЯ 31.10.2025
 read_from_key = InlineKeyboardMarkup(
     inline_keyboard=
     [
@@ -120,3 +121,36 @@ celebrate_lemur_kb = InlineKeyboardMarkup(
         ]
     ]
 )
+
+# #НОВЫЙ ГОД 31.12.25
+def generate_results_kb(key: str, value: str) -> InlineKeyboardMarkup: 
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+    
+    keyboard.inline_keyboard.append(
+        [
+            InlineKeyboardButton(
+                text=value, callback_data=key
+            )
+        ]
+    )
+    
+    return keyboard
+
+def get_photo_keyboard(current_index: int, total: int) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    
+    if current_index == 0:
+        builder.button(text="Подвести итоги 🎄", callback_data="start_results")
+    
+    elif current_index == total - 1:
+        builder.button(text="❮", callback_data=f"card_{current_index - 1}")
+        builder.button(text="Это было круто 🎉", callback_data="was_cool")
+        builder.adjust(2)
+    
+    else:
+        # Промежуточные страницы: "<" и ">"
+        builder.button(text="❮", callback_data=f"card_{current_index - 1}")
+        builder.button(text="❯", callback_data=f"card_{current_index + 1}")
+        builder.adjust(2)
+    
+    return builder.as_markup()

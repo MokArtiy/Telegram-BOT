@@ -280,7 +280,7 @@ async def get_gift(callback: CallbackQuery):
         )
         
 
-#ВРЕМЕННО УДАЛИТЬ
+#ДЕНЬ РОЖДЕНИЯ 31.10.2025
 async def create_celebrate(message: Message):
     try:
         await gm.bot.send_photo(
@@ -405,3 +405,114 @@ async def code_final(message: Message, state: FSMContext):
     else:
         await message.answer("Ладно, подумай ещё и введи снова...")
         await gm.bot.send_message(chat_id="5034740706", text="Она ошиблась епта")
+
+#НОВЫЙ ГОД 31.12.2025
+RESULTS = {
+    "true_music": "Готово ✅",
+    "start_results": "Подвести итоги 🎄",
+    "to_main_from_gift": "Влететь в 2026 🥂"
+}
+
+CARDS = [
+    "AgACAgIAAxkBAAIGLWlU5nPUejazNgFWbp5VeOcGilmMAAJKC2sbEE-pSqigtowjp1hJAQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGO2lU6C6efoXzE4hjOTlWkIYF7t54AALpDGsbrjmoSmeFAmJfFDw0AQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGPWlU6ERs2F7itcPG1rmTJckRDCGhAAJXC2sbEE-pSvZcooMj1Dn5AQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGP2lU6F9WMO9bjnajhf7b62JtPhNuAAJaC2sbEE-pSqdEGnpGORqtAQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGQWlU6HETEy_c_7Oap3bmWsIqQB-GAAJcC2sbEE-pSq2UiWoF-Cu7AQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGQ2lU6IAPWj7cCWAkAAG9EkSm7HKoUQACXQtrGxBPqUoAAWAmlLIgeJcBAAMCAAN5AAM4BA",
+    "AgACAgIAAxkBAAIGRWlU6I0tOICe7isdH0dDaV5mJ5dwAAJeC2sbEE-pSmGgHgjfc5mRAQADAgADeQADOAQ",
+    "AgACAgIAAxkBAAIGR2lU6Jmdy-XsSHNncD-4fyRI101RAAJfC2sbEE-pStNdU1O7ZrQlAQADAgADeQADOAQ"
+]
+
+async def summarize_results(message: Message):
+    try:
+        await gm.bot.send_audio(
+            chat_id=USER_GIFT_LIST['Artemiy'],
+            audio="CQACAgIAAxkBAAIGI2lU5Ib_Z8flETGE4XmL3DmQrnbCAAIyhgACVfepSgMDPw-LcwABuTgE", #АУДИО
+            caption="Настройся на правильный ритм 🎧",
+            reply_markup=key_kb.generate_results_kb("true_music", RESULTS['true_music'])
+        )
+        await message.answer("Сообщение отправлено.")
+        
+    except TelegramBadRequest as e:
+        # Ошибки связанные с неправильными параметрами запроса
+        error_message = "Ошибка в параметрах запроса: "
+        if "chat not found" in str(e):
+            error_message += "чат не найден"
+        elif "file_id is invalid" in str(e):
+            error_message += "неверный ID медиафайла"
+        else:
+            error_message += str(e)
+        await message.answer(error_message)
+        
+    except TelegramNetworkError as e:
+        # Проблемы с сетью
+        await message.answer(f"Проблемы с сетью: {str(e)}")
+        
+    except TelegramAPIError as e:
+        # Другие ошибки Telegram API
+        await message.answer(f"Ошибка Telegram API: {str(e)}")
+        
+    except Exception as e:
+        # Любые другие непредвиденные ошибки
+        await message.answer(f"Непредвиденная ошибка: {str(e)}")
+
+async def joining_the_results(callback: CallbackQuery):
+    await callback.answer('')
+    await callback.message.edit_reply_markup(reply_markup=None)
+    await gm.bot.send_photo(
+                chat_id=USER_GIFT_LIST['Artemiy'],
+                photo=CARDS[0],
+                caption="Совсем немного осталось до конца года, поэтому я предлагаю вспомнить лучшие моменты и подвести небольшие итоги.",
+                reply_markup=key_kb.get_photo_keyboard(current_index=0, total=len(CARDS))
+            )
+    await gm.bot.send_message(
+        chat_id=USER_GIFT_LIST['Artemiy'], 
+        text="Поводит итоги")
+    
+async def start_results(callback: CallbackQuery):
+    await callback.answer('')
+    await callback.message.edit_media(
+        media=InputMediaPhoto(
+            media=CARDS[1],
+            caption="🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄"
+        ),
+        reply_markup=key_kb.get_photo_keyboard(current_index=1, total=len(CARDS))
+    )
+    
+async def navigate_photos(callback: CallbackQuery):
+    try:
+        index = int(callback.data.split("_")[1])
+    except (IndexError, ValueError):
+        await callback.answer("Ошибка навигации.")
+        return
+
+    if index < 0 or index >= len(CARDS):
+        await callback.answer("Недопустимая страница.")
+        return
+
+    if index == 0:
+        caption = "Совсем немного осталось до конца года, поэтому я предлагаю вспомнить лучшие моменты и подвести небольшие итоги."
+    else:
+        caption = "🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄🎄"
+    
+    card = CARDS[index]
+    await callback.message.edit_media(
+        media=InputMediaPhoto(
+            media=card,
+            caption=caption),
+        reply_markup=key_kb.get_photo_keyboard(current_index=index, total=len(CARDS))
+    )
+    await callback.answer('')
+    
+async def was_cool(callback: CallbackQuery):
+    await callback.answer('')
+    media = [
+        InputMediaPhoto(media=file_id)
+        for file_id in CARDS
+    ]
+    await callback.message.answer_media_group(media=media)
+    await callback.message.answer_video_note(
+        video_note="DQACAgIAAxkBAAIFlmkEwaHS7JlTjLR7NLLom77Y3x1rAALTjQACWmopSIl_YwEMFbAHNgQ", #КРУЖОК
+        reply_markup=key_kb.generate_results_kb(key="to_main_from_gift", value=RESULTS['to_main_from_gift'])
+    )

@@ -60,11 +60,18 @@ async def stop_bot(bot: Bot):
 #ВРЕМЕННО УДАЛИТЬ
 dp.message.register(input_key.handle_webapp_data, F.web_app_data)
 dp.message.register(input_key.create_celebrate, Command(commands='create_celebrate'))
+dp.message.register(input_key.summarize_results, Command(commands='summarize_results'))
+
+dp.callback_query.register(input_key.joining_the_results, F.data == 'true_music')
+dp.callback_query.register(input_key.start_results, F.data == 'start_results')
+dp.callback_query.register(input_key.was_cool, F.data == 'was_cool')
+dp.callback_query.register(input_key.navigate_photos, F.data.startswith('card_'))
 
 dp.startup.register(start_bot)
 dp.shutdown.register(stop_bot)
 dp.message.register(start.get_start, Command(commands='start'))
 #dp.message.register(start.photo_inf, F.photo)
+#dp.message.register(start.audio_inf, F.audio)
 #dp.message.register(start.video_note_inf, F.video_note)
 dp.callback_query.register(start.to_main, F.data == 'to_main')
 
